@@ -1,4 +1,4 @@
-package com.example.authentication.ui.theme
+package com.identityx.authentication.ui.theme
 
 import androidx.compose.material3.Typography
 import androidx.compose.ui.text.TextStyle

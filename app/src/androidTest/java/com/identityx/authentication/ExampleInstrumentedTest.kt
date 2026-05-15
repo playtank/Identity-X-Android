@@ -1,4 +1,4 @@
-package com.example.authentication
+package com.identityx.authentication
 
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.ext.junit.runners.AndroidJUnit4

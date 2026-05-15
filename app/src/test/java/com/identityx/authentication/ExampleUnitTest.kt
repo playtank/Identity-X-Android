@@ -1,4 +1,4 @@
-package com.example.authentication
+package com.identityx.authentication
 
 import org.junit.Test
 

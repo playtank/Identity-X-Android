@@ -24,4 +24,5 @@ dependencyResolutionManagement {
 
 rootProject.name = "Authentication"
 include(":app")
- 
+include(":core:auth")
+include(":core:network")

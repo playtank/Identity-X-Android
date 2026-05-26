@@ -64,7 +64,6 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.test.manifest)
     implementation(libs.hilt.android)
     kapt(libs.hilt.compiler)
-    // 壳工程别忘了依赖你的底层业务模块
 //    implementation(project(":core:auth"))
 //    implementation(project(":core:network"))
 }

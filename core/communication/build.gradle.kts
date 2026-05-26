@@ -1,17 +1,17 @@
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.android)
-    id("org.jetbrains.kotlin.kapt")
-    alias(libs.plugins.dagger.hilt.android)
 }
 
 android {
-    namespace = "com.identityx.android.core.auth"
+    namespace = "com.identityx.communication"
     compileSdk = 36
 
     defaultConfig {
-        minSdk = 24
+        minSdk = 30
+
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        consumerProguardFiles("consumer-rules.pro")
     }
 
     buildTypes {
@@ -39,6 +39,4 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
-    implementation(libs.hilt.android)
-    kapt(libs.hilt.compiler)
 }

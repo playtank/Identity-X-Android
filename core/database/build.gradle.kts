@@ -4,7 +4,7 @@ plugins {
 }
 
 android {
-    namespace = "com.identityx.communication"
+    namespace = "com.identityx.database"
     compileSdk = 36
 
     defaultConfig {
@@ -36,8 +36,6 @@ dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
-    implementation(libs.google.play.services.wearable)
-    implementation(libs.kotlinx.coroutines.play.services)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

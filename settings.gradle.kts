@@ -23,8 +23,9 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "Authentication"
-include(":app")
+include(":app-handheld")
 include(":core:auth")
 include(":core:network")
 include(":app-wearable")
 include(":core:communication")
+include(":core:database")

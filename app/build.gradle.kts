@@ -62,9 +62,8 @@ dependencies {
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
-// Hilt 传统标准依赖
-    implementation("com.google.dagger:hilt-android:2.50")
-    kapt("com.google.dagger:hilt-compiler:2.50")
+    implementation(libs.hilt.android)
+    kapt(libs.hilt.compiler)
     // 壳工程别忘了依赖你的底层业务模块
 //    implementation(project(":core:auth"))
 //    implementation(project(":core:network"))

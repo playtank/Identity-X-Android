@@ -26,3 +26,5 @@ rootProject.name = "Authentication"
 include(":app")
 include(":core:auth")
 include(":core:network")
+include(":app-wearable")
+include(":core:communication")

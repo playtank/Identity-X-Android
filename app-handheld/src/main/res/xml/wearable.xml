@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <capability name="identityx_handheld_gateway">
+        <item>com.identityx.android.handheld</item>
+    </capability>
+</resources>

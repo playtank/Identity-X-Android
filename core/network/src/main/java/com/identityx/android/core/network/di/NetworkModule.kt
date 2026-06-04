@@ -1,7 +1,5 @@
 package com.identityx.android.core.network.di
 
-import com.apollographql.apollo3.ApolloClient
-import com.apollographql.apollo3.network.okHttpClient
 import com.identityx.android.core.network.BuildConfig
 import com.identityx.android.core.network.restful.IdentityXApiService
 import com.squareup.moshi.Moshi
@@ -22,8 +20,7 @@ import javax.inject.Singleton
 object NetworkModule {
 
     /**
-     * Shared OkHttpClient — used by both Retrofit and Apollo.
-     * Auth interceptor can be added here when token handling is implemented.
+     * Shared OkHttpClient — used by Retrofit (and Apollo once re-enabled).
      */
     @Provides
     @Singleton
@@ -35,7 +32,6 @@ object NetworkModule {
                 HttpLoggingInterceptor.Level.NONE
             }
         }
-
         return OkHttpClient.Builder()
             .addInterceptor(logging)
             .connectTimeout(15, TimeUnit.SECONDS)
@@ -44,9 +40,6 @@ object NetworkModule {
             .build()
     }
 
-    /**
-     * Moshi instance with Kotlin support for data class serialization.
-     */
     @Provides
     @Singleton
     fun provideMoshi(): Moshi {
@@ -55,9 +48,6 @@ object NetworkModule {
             .build()
     }
 
-    /**
-     * Retrofit instance for REST API calls.
-     */
     @Provides
     @Singleton
     fun provideRetrofit(okHttpClient: OkHttpClient, moshi: Moshi): Retrofit {
@@ -68,24 +58,20 @@ object NetworkModule {
             .build()
     }
 
-    /**
-     * IdentityX REST API service.
-     */
     @Provides
     @Singleton
     fun provideIdentityXApiService(retrofit: Retrofit): IdentityXApiService {
         return retrofit.create(IdentityXApiService::class.java)
     }
 
-    /**
-     * Apollo GraphQL client — shares the same OkHttpClient as Retrofit.
-     */
-    @Provides
-    @Singleton
-    fun provideApolloClient(okHttpClient: OkHttpClient): ApolloClient {
-        return ApolloClient.Builder()
-            .serverUrl("${BuildConfig.BASE_URL}/graphql")
-            .okHttpClient(okHttpClient)
-            .build()
-    }
+    // Apollo GraphQL — temporarily disabled pending Apollo Gradle plugin AGP 9 support
+    // Re-enable once com.apollographql.apollo plugin supports AGP 9 built-in Kotlin
+    // @Provides
+    // @Singleton
+    // fun provideApolloClient(okHttpClient: OkHttpClient): ApolloClient {
+    //     return ApolloClient.Builder()
+    //         .serverUrl("${BuildConfig.BASE_URL}/graphql")
+    //         .okHttpClient(okHttpClient)
+    //         .build()
+    // }
 }

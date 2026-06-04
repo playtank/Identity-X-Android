@@ -1,4 +1,4 @@
-package com.identityx.android.core.auth
+package com.identityx.android.core.navigation
 
 import org.junit.Test
 

@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace = "com.identityx.android.core.auth"
+    namespace = "com.identityx.android.core.navigation"
     compileSdk = 36
 
     defaultConfig {

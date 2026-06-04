@@ -1,9 +1,7 @@
 plugins {
     alias(libs.plugins.android.library)
-    alias(libs.plugins.kotlin.android)
     alias(libs.plugins.ksp)
     alias(libs.plugins.dagger.hilt.android)
-    alias(libs.plugins.apollo3)
 }
 
 android {
@@ -32,11 +30,11 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_21
+        targetCompatibility = JavaVersion.VERSION_21
     }
-    kotlinOptions {
-        jvmTarget = "11"
+    kotlin {
+        jvmToolchain(21)
     }
 }
 
@@ -59,15 +57,20 @@ dependencies {
     implementation(libs.moshi.kotlin)
     ksp(libs.moshi.kotlin.codegen)
 
-    // Apollo GraphQL
-    implementation(libs.apollo.runtime)
+    // Apollo GraphQL — temporarily disabled pending AGP 9 compatibility fix in Apollo plugin
+    // implementation(libs.apollo.runtime)
 
     // coroutines
     implementation(libs.kotlinx.coroutines.core)
 }
 
-apollo {
-    service("service") {
-        packageName.set("com.identityx.android.core.network.graphql")
-    }
-}
+// Apollo service config — re-enable when Apollo Gradle plugin supports AGP 9 built-in Kotlin
+// apollo {
+//     service("main") {
+//         packageName.set("com.identityx.android.core.network.graphql")
+//         srcDir("src/main/graphql")
+//         outputDirConnection {
+//             connectToAndroidSourceSet("main")
+//         }
+//     }
+// }

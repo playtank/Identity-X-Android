@@ -72,3 +72,6 @@ dependencies {
 //    implementation(project(":core:auth"))
 //    implementation(project(":core:network"))
 }
+ksp {
+    allowSourcesFromOtherPlugins = true
+}

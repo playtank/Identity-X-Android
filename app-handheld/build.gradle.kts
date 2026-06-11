@@ -55,6 +55,11 @@ dependencies {
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
     implementation(libs.google.play.services.wearable)
+    // Room
+    implementation(libs.room.runtime)
+    implementation(libs.room.ktx)
+    ksp(libs.room.compiler)
+    // Test
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -62,15 +67,18 @@ dependencies {
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
+    // Hilt
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
+    // Navigation
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.hilt.navigation.compose)
+    // Modules
     implementation(project(":core:navigation"))
-    implementation(project(":feature:login"))
     implementation(project(":core:communication"))
-//    implementation(project(":core:auth"))
-//    implementation(project(":core:network"))
+    implementation(project(":core:network"))
+    implementation(project(":core:database"))
+    implementation(project(":feature:login"))
 }
 ksp {
     allowSourcesFromOtherPlugins = true

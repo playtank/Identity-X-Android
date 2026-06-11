@@ -12,4 +12,7 @@ interface IdentityXApiService {
 
     @POST("/api/v1/auth/refresh")
     suspend fun refreshToken(@Body request: AuthRequest): AuthResponse
+
+    @POST("/api/v1/auth/logout")
+    suspend fun logout()
 }

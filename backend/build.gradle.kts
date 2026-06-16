@@ -5,6 +5,8 @@ plugins {
     application
 }
 
+import java.util.Properties
+
 java {
     sourceCompatibility = JavaVersion.VERSION_11
     targetCompatibility = JavaVersion.VERSION_11
@@ -18,6 +20,39 @@ kotlin {
 
 application {
     mainClass.set("com.identityx.backend.ApplicationKt")
+}
+
+// ---------------------------------------------------------------------------
+// Read secrets from local.properties (never committed to version control)
+// and inject them into a generated backend.properties resource file.
+// ---------------------------------------------------------------------------
+val localProps = Properties().apply {
+    val f = rootProject.file("local.properties")
+    if (f.exists()) f.inputStream().use { load(it) }
+}
+
+val generateBackendProperties by tasks.registering {
+    val outputDir = layout.buildDirectory.dir("generated/backend-resources/main")
+    outputs.dir(outputDir)
+    doLast {
+        val propsFile = outputDir.get().file("backend.properties").asFile
+        propsFile.parentFile.mkdirs()
+        propsFile.writeText(
+            """
+            neon.url=${localProps.getProperty("NEON_URL", "")}
+            neon.user=${localProps.getProperty("NEON_USER", "")}
+            neon.password=${localProps.getProperty("NEON_PASSWORD", "")}
+            """.trimIndent()
+        )
+    }
+}
+
+sourceSets["main"].resources.srcDir(
+    generateBackendProperties.map { layout.buildDirectory.dir("generated/backend-resources/main") }
+)
+
+tasks.named("processResources") {
+    dependsOn(generateBackendProperties)
 }
 
 dependencies {

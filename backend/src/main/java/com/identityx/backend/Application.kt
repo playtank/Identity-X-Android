@@ -6,6 +6,17 @@ import io.ktor.server.netty.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import java.sql.DriverManager
+import java.util.Properties
+
+// Load backend.properties from the classpath (generated at build time from local.properties)
+private val backendProps: Properties by lazy {
+    Properties().apply {
+        val stream = object {}.javaClass.classLoader
+            .getResourceAsStream("backend.properties")
+            ?: error("backend.properties not found on classpath. Run a Gradle build first.")
+        load(stream)
+    }
+}
 
 fun main() {
     embeddedServer(Netty, port = 8080, host = "0.0.0.0", module = Application::module)
@@ -25,9 +36,9 @@ fun Application.configureRouting() {
 
         // Database connectivity test endpoint
         get("/test-db") {
-            val jdbcUrl = "jdbc:postgresql://ep-lucky-water-aq1w8bal.c-8.us-east-1.aws.neon.tech/neondb?sslmode=require"
-            val user = "neondb_owner"
-            val password = "npg_4GCozxH9BjbU"
+            val jdbcUrl  = backendProps.getProperty("neon.url")
+            val user     = backendProps.getProperty("neon.user")
+            val password = backendProps.getProperty("neon.password")
 
             try {
                 // Explicitly load the PostgreSQL driver class

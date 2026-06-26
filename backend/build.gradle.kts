@@ -26,30 +26,45 @@ application {
 // Read secrets from local.properties (never committed to version control)
 // and inject them into a generated backend.properties resource file.
 // ---------------------------------------------------------------------------
-val localProps = Properties().apply {
-    val f = rootProject.file("local.properties")
-    if (f.exists()) f.inputStream().use { load(it) }
-}
 
-val generateBackendProperties by tasks.registering {
-    val outputDir = layout.buildDirectory.dir("generated/backend-resources/main")
-    outputs.dir(outputDir)
-    doLast {
+abstract class GenerateBackendPropertiesTask : DefaultTask() {
+    @get:Input
+    abstract val neonUrl: Property<String>
+    @get:Input
+    abstract val neonUser: Property<String>
+    @get:Input
+    abstract val neonPassword: Property<String>
+
+    @get:OutputDirectory
+    abstract val outputDir: DirectoryProperty
+
+    @TaskAction
+    fun generate() {
         val propsFile = outputDir.get().file("backend.properties").asFile
         propsFile.parentFile.mkdirs()
         propsFile.writeText(
             """
-            neon.url=${localProps.getProperty("NEON_URL", "")}
-            neon.user=${localProps.getProperty("NEON_USER", "")}
-            neon.password=${localProps.getProperty("NEON_PASSWORD", "")}
+            neon.url=${neonUrl.get()}
+            neon.user=${neonUser.get()}
+            neon.password=${neonPassword.get()}
             """.trimIndent()
         )
     }
 }
 
-sourceSets["main"].resources.srcDir(
-    generateBackendProperties.map { layout.buildDirectory.dir("generated/backend-resources/main") }
-)
+val localProps = Properties().apply {
+    val f = rootProject.file("local.properties")
+    if (f.exists()) f.inputStream().use { load(it) }
+}
+
+val generateBackendProperties = tasks.register<GenerateBackendPropertiesTask>("generateBackendProperties") {
+    neonUrl.set(localProps.getProperty("NEON_URL", ""))
+    neonUser.set(localProps.getProperty("NEON_USER", ""))
+    neonPassword.set(localProps.getProperty("NEON_PASSWORD", ""))
+    outputDir.set(layout.buildDirectory.dir("generated/backend-resources/main"))
+}
+
+sourceSets["main"].resources.srcDir(generateBackendProperties.flatMap { it.outputDir })
 
 tasks.named("processResources") {
     dependsOn(generateBackendProperties)

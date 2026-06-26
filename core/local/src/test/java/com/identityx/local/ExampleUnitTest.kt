@@ -1,4 +1,4 @@
-package com.identityx.database
+package com.identityx.local
 
 import org.junit.Test
 

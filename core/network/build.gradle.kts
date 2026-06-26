@@ -40,6 +40,7 @@ android {
 }
 
 dependencies {
+    implementation(project(":core:local"))
     implementation(libs.androidx.core.ktx)
     implementation(libs.play.services.auth)
     testImplementation(libs.junit)
@@ -50,10 +51,14 @@ dependencies {
 
     // Ktor client
     implementation(libs.ktor.client.core)
-    implementation(libs.ktor.client.android)
+    implementation(libs.ktor.client.okhttp)
     implementation(libs.ktor.client.content.negotiation)
     implementation(libs.ktor.client.logging)
     implementation(libs.ktor.serialization.kotlinx.json.client)
+
+    // OkHttp (available for interceptors, caching, or custom engine use)
+    implementation(libs.okhttp)
+    implementation(libs.okhttp.logging.interceptor)
 
     // Coroutines
     implementation(libs.kotlinx.coroutines.core)

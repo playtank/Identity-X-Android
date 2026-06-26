@@ -1,4 +1,4 @@
-package com.identityx.database.energy
+package com.identityx.local.energy
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey

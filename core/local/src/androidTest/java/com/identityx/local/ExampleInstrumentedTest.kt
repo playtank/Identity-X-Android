@@ -1,4 +1,4 @@
-package com.identityx.database
+package com.identityx.local
 
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.ext.junit.runners.AndroidJUnit4

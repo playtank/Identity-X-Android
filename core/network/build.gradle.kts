@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.ksp)
     alias(libs.plugins.dagger.hilt.android)
+    id("org.jetbrains.kotlin.plugin.serialization") version "2.1.21"
 }
 
 android {
@@ -17,7 +18,7 @@ android {
         buildConfig = true
     }
     buildTypes {
-        // Debug: points to local Ktor MockServer (10.0.2.2 is the Android emulator loopback to host)
+        // Debug: points to local Ktor server (10.0.2.2 is the Android emulator loopback to host)
         getByName("debug") {
             buildConfigField("String", "BASE_URL", "\"http://10.0.2.2:8080\"")
         }
@@ -40,8 +41,6 @@ android {
 
 dependencies {
     implementation(libs.androidx.core.ktx)
-    implementation(libs.androidx.appcompat)
-    implementation(libs.material)
     implementation(libs.play.services.auth)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
@@ -49,28 +48,13 @@ dependencies {
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
 
-    // Networking — OkHttp + Retrofit + Moshi
-    implementation(libs.okhttp)
-    implementation(libs.okhttp.logging.interceptor)
-    implementation(libs.retrofit)
-    implementation(libs.retrofit.converter.moshi)
-    implementation(libs.moshi.kotlin)
-    ksp(libs.moshi.kotlin.codegen)
+    // Ktor client
+    implementation(libs.ktor.client.core)
+    implementation(libs.ktor.client.android)
+    implementation(libs.ktor.client.content.negotiation)
+    implementation(libs.ktor.client.logging)
+    implementation(libs.ktor.serialization.kotlinx.json.client)
 
-    // Apollo GraphQL — temporarily disabled pending AGP 9 compatibility fix in Apollo plugin
-    // implementation(libs.apollo.runtime)
-
-    // coroutines
+    // Coroutines
     implementation(libs.kotlinx.coroutines.core)
 }
-
-// Apollo service config — re-enable when Apollo Gradle plugin supports AGP 9 built-in Kotlin
-// apollo {
-//     service("main") {
-//         packageName.set("com.identityx.android.core.network.graphql")
-//         srcDir("src/main/graphql")
-//         outputDirConnection {
-//             connectToAndroidSourceSet("main")
-//         }
-//     }
-// }

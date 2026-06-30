@@ -77,7 +77,7 @@ dependencies {
     implementation(project(":core:navigation"))
     implementation(project(":core:communication"))
     implementation(project(":core:network"))
-    implementation(project(":core:database"))
+    implementation(project(":core:local"))
     implementation(project(":feature:login"))
 }
 ksp {

@@ -1,9 +1,9 @@
-package com.identityx.database
+package com.identityx.local
 
 import androidx.room.Database
 import androidx.room.RoomDatabase
-import com.identityx.database.energy.EnergyAccountDao
-import com.identityx.database.energy.EnergyAccountEntity
+import com.identityx.local.energy.EnergyAccountDao
+import com.identityx.local.energy.EnergyAccountEntity
 
 @Database(entities = [EnergyAccountEntity::class], version = 1, exportSchema = false)
 abstract class AppDatabase : RoomDatabase() {

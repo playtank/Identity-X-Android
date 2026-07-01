@@ -1,31 +1,45 @@
 package com.identityx.android.core.network.di
 
 import com.identityx.android.core.network.BuildConfig
-import com.identityx.android.core.network.restful.IdentityXApiService
-import com.squareup.moshi.Moshi
-import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
+import com.identityx.android.core.network.data.AuthInterceptor
+import com.identityx.android.core.network.data.OkHttpTokenAuthenticator
+import com.identityx.android.core.network.restful.IdentityXApiClient
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import io.ktor.client.HttpClient
+import io.ktor.client.engine.okhttp.OkHttp
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.serialization.kotlinx.json.json
+import kotlinx.serialization.json.Json
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
-import retrofit2.Retrofit
-import retrofit2.converter.moshi.MoshiConverterFactory
 import java.util.concurrent.TimeUnit
+import javax.inject.Named
+import javax.inject.Qualifier
 import javax.inject.Singleton
+
+@Qualifier
+@Retention(AnnotationRetention.BINARY)
+annotation class IdentityHttpClient
 
 @Module
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
 
-    /**
-     * Shared OkHttpClient — used by Retrofit (and Apollo once re-enabled).
-     */
+    @Provides
+    @Named("baseUrl")
+    fun provideBaseUrl(): String = BuildConfig.BASE_URL
+
     @Provides
     @Singleton
-    fun provideOkHttpClient(): OkHttpClient {
-        val logging = HttpLoggingInterceptor().apply {
+    @IdentityHttpClient
+    fun provideOkHttpClient(
+        authInterceptor: AuthInterceptor,
+        authenticator: OkHttpTokenAuthenticator
+    ): OkHttpClient {
+        val loggingInterceptor = HttpLoggingInterceptor().apply {
             level = if (BuildConfig.DEBUG) {
                 HttpLoggingInterceptor.Level.BODY
             } else {
@@ -33,45 +47,40 @@ object NetworkModule {
             }
         }
         return OkHttpClient.Builder()
-            .addInterceptor(logging)
             .connectTimeout(15, TimeUnit.SECONDS)
             .readTimeout(30, TimeUnit.SECONDS)
             .writeTimeout(30, TimeUnit.SECONDS)
+            .retryOnConnectionFailure(true)
+            .addInterceptor(loggingInterceptor)
+            .addInterceptor(authInterceptor)
+            .authenticator(authenticator)
             .build()
     }
 
     @Provides
     @Singleton
-    fun provideMoshi(): Moshi {
-        return Moshi.Builder()
-            .addLast(KotlinJsonAdapterFactory())
-            .build()
+    fun provideHttpClient(
+        @IdentityHttpClient okHttpClient: OkHttpClient
+    ): HttpClient {
+        return HttpClient(OkHttp) {
+            engine {
+                preconfigured = okHttpClient
+            }
+            install(ContentNegotiation) {
+                json(Json {
+                    ignoreUnknownKeys = true
+                    isLenient = true
+                })
+            }
+        }
     }
 
     @Provides
     @Singleton
-    fun provideRetrofit(okHttpClient: OkHttpClient, moshi: Moshi): Retrofit {
-        return Retrofit.Builder()
-            .baseUrl(BuildConfig.BASE_URL)
-            .client(okHttpClient)
-            .addConverterFactory(MoshiConverterFactory.create(moshi))
-            .build()
+    fun provideIdentityXApiClient(
+        httpClient: HttpClient,
+        @Named("baseUrl") baseUrl: String
+    ): IdentityXApiClient {
+        return IdentityXApiClient(httpClient, baseUrl)
     }
-
-    @Provides
-    @Singleton
-    fun provideIdentityXApiService(retrofit: Retrofit): IdentityXApiService {
-        return retrofit.create(IdentityXApiService::class.java)
-    }
-
-    // Apollo GraphQL — temporarily disabled pending Apollo Gradle plugin AGP 9 support
-    // Re-enable once com.apollographql.apollo plugin supports AGP 9 built-in Kotlin
-    // @Provides
-    // @Singleton
-    // fun provideApolloClient(okHttpClient: OkHttpClient): ApolloClient {
-    //     return ApolloClient.Builder()
-    //         .serverUrl("${BuildConfig.BASE_URL}/graphql")
-    //         .okHttpClient(okHttpClient)
-    //         .build()
-    // }
 }

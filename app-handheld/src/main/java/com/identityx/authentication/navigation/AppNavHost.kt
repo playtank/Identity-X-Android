@@ -1,11 +1,11 @@
 package com.identityx.authentication.navigation
 
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.identityx.authentication.ui.DashboardScreen
 import com.identityx.android.core.navigation.NavigationDestinations
 import com.identityx.login.navigation.loginNavGraph
 
@@ -26,9 +26,9 @@ fun AppNavHost(
         // Feature: Login
         loginNavGraph(navController)
 
-        // Feature: Home (placeholder — replace with homeNavGraph(navController) when ready)
+        // Feature: Dashboard
         composable(route = NavigationDestinations.HOME) {
-            Text("Home Screen — coming soon")
+            DashboardScreen()
         }
 
         // Add more feature nav graphs here as the app grows:

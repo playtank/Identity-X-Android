@@ -1,8 +1,8 @@
 package com.identityx.android.core.network.model
 
-import com.squareup.moshi.JsonClass
+import kotlinx.serialization.Serializable
 
-@JsonClass(generateAdapter = true)
+@Serializable
 data class AuthRequest(
     val email: String,
     val password: String

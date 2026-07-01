@@ -19,7 +19,7 @@ private val backendProps: Properties by lazy {
 }
 
 fun main() {
-    embeddedServer(Netty, port = 8080, host = "0.0.0.0", module = Application::module)
+    embeddedServer(Netty, port = 8080, host = "10.0.0.188", module = Application::module)
         .start(wait = true)
 }
 

@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     id("java-library")
     alias(libs.plugins.jetbrains.kotlin.jvm)
@@ -5,7 +7,6 @@ plugins {
     application
 }
 
-import java.util.Properties
 
 java {
     sourceCompatibility = JavaVersion.VERSION_11
@@ -28,12 +29,11 @@ application {
 // ---------------------------------------------------------------------------
 
 abstract class GenerateBackendPropertiesTask : DefaultTask() {
-    @get:Input
-    abstract val neonUrl: Property<String>
-    @get:Input
-    abstract val neonUser: Property<String>
-    @get:Input
-    abstract val neonPassword: Property<String>
+    @get:Input abstract val neonUrl: Property<String>
+    @get:Input abstract val neonUser: Property<String>
+    @get:Input abstract val neonPassword: Property<String>
+    @get:Input abstract val backendHost: Property<String>
+    @get:Input abstract val backendPort: Property<String>
 
     @get:OutputDirectory
     abstract val outputDir: DirectoryProperty
@@ -47,6 +47,8 @@ abstract class GenerateBackendPropertiesTask : DefaultTask() {
             neon.url=${neonUrl.get()}
             neon.user=${neonUser.get()}
             neon.password=${neonPassword.get()}
+            backend.host=${backendHost.get()}
+            backend.port=${backendPort.get()}
             """.trimIndent()
         )
     }
@@ -61,6 +63,8 @@ val generateBackendProperties = tasks.register<GenerateBackendPropertiesTask>("g
     neonUrl.set(localProps.getProperty("NEON_URL", ""))
     neonUser.set(localProps.getProperty("NEON_USER", ""))
     neonPassword.set(localProps.getProperty("NEON_PASSWORD", ""))
+    backendHost.set(localProps.getProperty("BACKEND_HOST", "0.0.0.0"))
+    backendPort.set(localProps.getProperty("BACKEND_PORT", "8080"))
     outputDir.set(layout.buildDirectory.dir("generated/backend-resources/main"))
 }
 

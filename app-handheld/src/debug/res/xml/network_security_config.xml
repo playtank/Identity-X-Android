@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Debug-only network security config.
+    Permits cleartext HTTP for all connections in debug builds.
+    This file is ONLY active in debug — release builds use Android's default
+    strict policy (HTTPS required for all traffic).
+-->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="true">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+</network-security-config>

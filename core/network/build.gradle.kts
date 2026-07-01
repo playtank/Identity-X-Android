@@ -1,9 +1,19 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.ksp)
     alias(libs.plugins.dagger.hilt.android)
     id("org.jetbrains.kotlin.plugin.serialization") version "2.1.21"
 }
+
+val localProps = Properties().apply {
+    val f = rootProject.file("local.properties")
+    if (f.exists()) f.inputStream().use { load(it) }
+}
+
+// Fallback to emulator loopback if DEBUG_BASE_URL is not set in local.properties
+val debugBaseUrl = localProps.getProperty("DEBUG_BASE_URL", "http://10.0.2.2:8080")
 
 android {
     namespace = "com.identityx.android.core.network"
@@ -18,9 +28,10 @@ android {
         buildConfig = true
     }
     buildTypes {
-        // Debug: points to local Ktor server (10.0.2.2 is the Android emulator loopback to host)
+        // Debug: reads from local.properties → DEBUG_BASE_URL
+        // Falls back to 10.0.2.2:8080 (emulator loopback) if not set
         getByName("debug") {
-            buildConfigField("String", "BASE_URL", "\"http://10.0.2.2:8080\"")
+            buildConfigField("String", "BASE_URL", "\"$debugBaseUrl\"")
         }
 
         // Release: points to production server

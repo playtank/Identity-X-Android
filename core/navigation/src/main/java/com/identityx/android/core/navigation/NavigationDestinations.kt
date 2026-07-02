@@ -6,7 +6,10 @@ package com.identityx.android.core.navigation
  * no magic strings scattered across the codebase.
  */
 object NavigationDestinations {
-    const val LOGIN = "login"
-    const val HOME = "home"
+    const val LOGIN            = "login"
+    const val HOME             = "home"
+    const val REGISTRATION     = "registration"
+    const val FORGOT_PASSWORD  = "forgot_password"
+    const val SUPPORT          = "support"
     // Add more destinations here as features grow
 }

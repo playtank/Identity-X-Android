@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.identityx.login.bridge.LoginSessionPort
 import com.identityx.login.domain.model.LoginUiState
+import com.identityx.login.domain.model.LoginUiState.LoginStatus
 import com.identityx.login.domain.usecase.LoginAndFetchProfileUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
@@ -21,47 +22,41 @@ class LoginViewModel @Inject constructor(
     private val sessionBridge: LoginSessionPort
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow<LoginUiState>(LoginUiState.Idle)
+    private val _uiState = MutableStateFlow(LoginUiState())
     val uiState: StateFlow<LoginUiState> = _uiState.asStateFlow()
 
-    private val _email = MutableStateFlow("")
-    val email: StateFlow<String> = _email.asStateFlow()
-
-    private val _password = MutableStateFlow("")
-    val password: StateFlow<String> = _password.asStateFlow()
-
-    // One-shot navigation event — navigates to dashboard on successful login
+    // One-shot navigation event
     private val _navigationEvent = Channel<NavigationEvent>(Channel.BUFFERED)
     val navigationEvent = _navigationEvent.receiveAsFlow()
 
     fun onIntent(intent: LoginUiIntent) {
         when (intent) {
-            is LoginUiIntent.EmailChanged    -> _email.update { intent.email }
-            is LoginUiIntent.PasswordChanged -> _password.update { intent.password }
+            is LoginUiIntent.EmailChanged    -> _uiState.update { it.copy(email = intent.email, status = LoginStatus.Idle) }
+            is LoginUiIntent.PasswordChanged -> _uiState.update { it.copy(password = intent.password, status = LoginStatus.Idle) }
             is LoginUiIntent.Submit          -> submitLogin()
         }
     }
 
     private fun submitLogin() {
-        if (_uiState.value is LoginUiState.Loading) return
+        if (_uiState.value.status is LoginStatus.Loading) return
 
-        val email = _email.value.trim()
-        val password = _password.value
+        val email    = _uiState.value.email.trim()
+        val password = _uiState.value.password
 
         if (email.isBlank() || password.isBlank()) {
-            _uiState.update { LoginUiState.Error("Email and password are required") }
+            _uiState.update { it.copy(status = LoginStatus.Error("Email and password are required")) }
             return
         }
 
         viewModelScope.launch {
-            _uiState.update { LoginUiState.Loading }
+            _uiState.update { it.copy(status = LoginStatus.Loading) }
             loginUseCase(email, password)
                 .onSuccess {
-                    _uiState.update { LoginUiState.Idle }
+                    _uiState.update { it.copy(status = LoginStatus.Idle) }
                     _navigationEvent.send(NavigationEvent.ToDashboard)
                 }
                 .onFailure { error ->
-                    _uiState.update { LoginUiState.Error(error.message ?: "Login failed") }
+                    _uiState.update { it.copy(status = LoginStatus.Error(error.message ?: "Login failed")) }
                 }
         }
     }

@@ -79,6 +79,6 @@ class TokenManager(private val config: JwtConfig) {
 
     companion object {
         private const val ACCESS_TOKEN_TTL_MS  = 15 * 60 * 1000L           // 15 minutes
-        private const val REFRESH_TOKEN_TTL_MS = 7 * 24 * 60 * 60 * 1000L  // 7 days
+        private const val REFRESH_TOKEN_TTL_MS = 30 * 60 * 1000L //7 * 24 * 60 * 60 * 1000L  // 7 days
     }
 }

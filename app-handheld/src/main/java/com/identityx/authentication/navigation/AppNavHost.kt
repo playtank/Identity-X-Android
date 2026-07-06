@@ -2,26 +2,42 @@ package com.identityx.authentication.navigation
 
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.identityx.android.core.navigation.LoginActions
 import com.identityx.android.core.navigation.NavigationDestinations
+import com.identityx.android.core.network.session.SessionEventBus
 import com.identityx.authentication.ui.DashboardScreen
 import com.identityx.login.navigation.loginNavGraph
 
 /**
  * Root NavHost for the handheld app.
  *
- * All NavController calls live here — feature modules never touch NavController.
- * Each feature receives only an Actions object (plain lambdas) as its navigation contract.
+ * Owns all NavController calls — feature modules never import NavController.
+ * Collects [SessionEventBus] to force-navigate to Login when both tokens expire.
  */
 @Composable
 fun AppNavHost(
     navController: NavHostController = rememberNavController(),
-    startDestination: String = NavigationDestinations.LOGIN
+    startDestination: String = NavigationDestinations.LOGIN,
+    sessionEventBus: SessionEventBus
 ) {
+    // Force logout when OkHttpTokenAuthenticator signals session expiry
+    LaunchedEffect(Unit) {
+        sessionEventBus.events.collect { event ->
+            when (event) {
+                is SessionEventBus.SessionEvent.SessionExpired -> {
+                    navController.navigate(NavigationDestinations.LOGIN) {
+                        popUpTo(0) { inclusive = true } // clear entire back stack
+                    }
+                }
+            }
+        }
+    }
+
     NavHost(
         navController = navController,
         startDestination = startDestination
@@ -48,7 +64,13 @@ fun AppNavHost(
 
         // Feature: Dashboard / Home
         composable(route = NavigationDestinations.HOME) {
-            DashboardScreen()
+            DashboardScreen(
+                onLogout = {
+                    navController.navigate(NavigationDestinations.LOGIN) {
+                        popUpTo(NavigationDestinations.HOME) { inclusive = true }
+                    }
+                }
+            )
         }
 
         // Placeholder destinations — replace with feature nav graphs when built
@@ -63,9 +85,5 @@ fun AppNavHost(
         composable(route = NavigationDestinations.SUPPORT) {
             Text("Support — coming soon")
         }
-
-        // Add more feature nav graphs here as the app grows:
-        // profileNavGraph(profileActions)
-        // settingsNavGraph(settingsActions)
     }
 }

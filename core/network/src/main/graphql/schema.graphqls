@@ -1,0 +1,15 @@
+"""
+Identity X GraphQL Schema
+Replace this placeholder with the real schema from your backend.
+You can download it via Apollo CLI: npx apollo schema:download --endpoint http://<host>:8080/graphql
+"""
+
+type Query {
+  # Placeholder — replace with real query types
+  ping: String
+}
+
+type Mutation {
+  # Placeholder — replace with real mutation types
+  noop: Boolean
+}

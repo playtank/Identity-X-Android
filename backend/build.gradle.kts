@@ -34,6 +34,9 @@ abstract class GenerateBackendPropertiesTask : DefaultTask() {
     @get:Input abstract val neonPassword: Property<String>
     @get:Input abstract val backendHost: Property<String>
     @get:Input abstract val backendPort: Property<String>
+    @get:Input abstract val jwtSecret: Property<String>
+    @get:Input abstract val jwtIssuer: Property<String>
+    @get:Input abstract val jwtAudience: Property<String>
 
     @get:OutputDirectory
     abstract val outputDir: DirectoryProperty
@@ -49,6 +52,9 @@ abstract class GenerateBackendPropertiesTask : DefaultTask() {
             neon.password=${neonPassword.get()}
             backend.host=${backendHost.get()}
             backend.port=${backendPort.get()}
+            jwt.secret=${jwtSecret.get()}
+            jwt.issuer=${jwtIssuer.get()}
+            jwt.audience=${jwtAudience.get()}
             """.trimIndent()
         )
     }
@@ -65,6 +71,9 @@ val generateBackendProperties = tasks.register<GenerateBackendPropertiesTask>("g
     neonPassword.set(localProps.getProperty("NEON_PASSWORD", ""))
     backendHost.set(localProps.getProperty("BACKEND_HOST", "0.0.0.0"))
     backendPort.set(localProps.getProperty("BACKEND_PORT", "8080"))
+    jwtSecret.set(localProps.getProperty("JWT_SECRET", ""))
+    jwtIssuer.set(localProps.getProperty("JWT_ISSUER", "identityx-backend"))
+    jwtAudience.set(localProps.getProperty("JWT_AUDIENCE", "identityx-android"))
     outputDir.set(layout.buildDirectory.dir("generated/backend-resources/main"))
 }
 
@@ -82,6 +91,10 @@ dependencies {
     // Content negotiation and JSON serialization
     implementation(libs.ktor.server.content.negotiation)
     implementation(libs.ktor.serialization.kotlinx.json)
+
+    // JWT authentication
+    implementation(libs.ktor.server.auth)
+    implementation(libs.ktor.server.auth.jwt)
 
     // PostgreSQL JDBC driver (Neon cloud database)
     implementation(libs.postgresql)

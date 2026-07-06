@@ -4,7 +4,7 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import com.identityx.android.core.navigation.LoginActions
 import com.identityx.android.core.navigation.NavigationDestinations
-import com.identityx.login.ui.LoginScreen
+import com.identityx.login.presentation.LoginScreen
 
 /**
  * Registers the login destination into the NavGraph.

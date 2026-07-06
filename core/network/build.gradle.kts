@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.ksp)
     alias(libs.plugins.dagger.hilt.android)
+    alias(libs.plugins.apollo3)
     id("org.jetbrains.kotlin.plugin.serialization") version "2.1.21"
 }
 
@@ -73,4 +74,14 @@ dependencies {
 
     // Coroutines
     implementation(libs.kotlinx.coroutines.core)
+
+    // Apollo GraphQL client
+    implementation(libs.apollo.runtime)
+}
+
+apollo {
+    service("identityx") {
+        packageName.set("com.identityx.android.core.network.graphql.generated")
+        srcDir("src/main/graphql")
+    }
 }

@@ -31,9 +31,27 @@ class LoginViewModel @Inject constructor(
 
     fun onIntent(intent: LoginUiIntent) {
         when (intent) {
-            is LoginUiIntent.EmailChanged    -> _uiState.update { it.copy(email = intent.email, status = LoginStatus.Idle) }
-            is LoginUiIntent.PasswordChanged -> _uiState.update { it.copy(password = intent.password, status = LoginStatus.Idle) }
-            is LoginUiIntent.Submit          -> submitLogin()
+            is LoginUiIntent.EmailChanged ->
+                _uiState.update { it.copy(email = intent.email, status = LoginStatus.Idle) }
+
+            is LoginUiIntent.PasswordChanged ->
+                _uiState.update { it.copy(password = intent.password, status = LoginStatus.Idle) }
+
+            is LoginUiIntent.RememberUsernameChanged ->
+                _uiState.update { it.copy(rememberUsername = intent.checked) }
+
+            is LoginUiIntent.BiometricEnabledChanged ->
+                _uiState.update { it.copy(biometricEnabled = intent.checked) }
+
+            is LoginUiIntent.Submit ->
+                submitLogin()
+
+            is LoginUiIntent.BiometricSuccess ->
+                onBiometricSuccess()
+
+            is LoginUiIntent.BiometricDismissed ->
+                // Cancel or failure — silently return to Idle, no error shown
+                _uiState.update { it.copy(status = LoginStatus.Idle) }
         }
     }
 
@@ -52,12 +70,28 @@ class LoginViewModel @Inject constructor(
             _uiState.update { it.copy(status = LoginStatus.Loading) }
             loginUseCase(email, password)
                 .onSuccess {
-                    _uiState.update { it.copy(status = LoginStatus.Idle) }
-                    _navigationEvent.send(NavigationEvent.ToDashboard)
+                    val state = _uiState.value
+                    if (state.rememberUsername && state.biometricEnabled) {
+                        // Both checkboxes checked — hand off to biometric prompt
+                        _uiState.update { it.copy(status = LoginStatus.BiometricPrompting) }
+                    } else {
+                        // Normal login — navigate directly
+                        _uiState.update { it.copy(status = LoginStatus.Idle) }
+                        _navigationEvent.send(NavigationEvent.ToDashboard)
+                    }
                 }
                 .onFailure { error ->
-                    _uiState.update { it.copy(status = LoginStatus.Error(error.message ?: "Login failed")) }
+                    _uiState.update {
+                        it.copy(status = LoginStatus.Error(error.message ?: "Login failed"))
+                    }
                 }
+        }
+    }
+
+    private fun onBiometricSuccess() {
+        viewModelScope.launch {
+            _uiState.update { it.copy(status = LoginStatus.Idle) }
+            _navigationEvent.send(NavigationEvent.ToDashboard)
         }
     }
 

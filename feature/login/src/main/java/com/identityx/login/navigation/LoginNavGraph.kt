@@ -1,25 +1,20 @@
 package com.identityx.login.navigation
 
 import androidx.navigation.NavGraphBuilder
-import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
+import com.identityx.android.core.navigation.LoginActions
 import com.identityx.android.core.navigation.NavigationDestinations
-import com.identityx.login.ui.LoginScreen
+import com.identityx.login.presentation.LoginScreen
 
 /**
  * Registers the login destination into the NavGraph.
- * The app-level NavHost calls this extension — feature module stays
- * fully self-contained and the app module never imports LoginScreen directly.
+ *
+ * Accepts [LoginActions] instead of NavHostController — the feature module
+ * has no knowledge of routing or back-stack logic. All navigation decisions
+ * live in app-handheld's AppNavHost, passed down as lambdas.
  */
-fun NavGraphBuilder.loginNavGraph(navController: NavHostController) {
+fun NavGraphBuilder.loginNavGraph(actions: LoginActions) {
     composable(route = NavigationDestinations.LOGIN) {
-        LoginScreen(
-            onLoginSuccess = {
-                navController.navigate(NavigationDestinations.HOME) {
-                    // Clear login from the back stack so back button doesn't return to it
-                    popUpTo(NavigationDestinations.LOGIN) { inclusive = true }
-                }
-            }
-        )
+        LoginScreen(actions = actions)
     }
 }

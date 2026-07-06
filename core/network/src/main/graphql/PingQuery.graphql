@@ -1,0 +1,4 @@
+# Placeholder health-check query — replace with real operations when schema is available
+query Ping {
+  ping
+}

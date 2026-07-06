@@ -1,4 +1,0 @@
-# Placeholder schema — replace with your actual GraphQL schema
-type Query {
-  placeholder: String
-}

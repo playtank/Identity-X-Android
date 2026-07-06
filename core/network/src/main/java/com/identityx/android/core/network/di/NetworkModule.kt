@@ -1,8 +1,11 @@
 package com.identityx.android.core.network.di
 
+import com.apollographql.apollo.ApolloClient
+import com.apollographql.apollo.network.okHttpClient
 import com.identityx.android.core.network.BuildConfig
 import com.identityx.android.core.network.data.AuthInterceptor
 import com.identityx.android.core.network.data.OkHttpTokenAuthenticator
+import com.identityx.android.core.network.graphql.IdentityXGraphService
 import com.identityx.android.core.network.restful.IdentityXApiClient
 import dagger.Module
 import dagger.Provides
@@ -82,5 +85,30 @@ object NetworkModule {
         @Named("baseUrl") baseUrl: String
     ): IdentityXApiClient {
         return IdentityXApiClient(httpClient, baseUrl)
+    }
+
+    /**
+     * Apollo GraphQL client — shares the same authenticated OkHttpClient.
+     * Not used yet. Wire [IdentityXGraphService] into a repository when ready.
+     * Endpoint: <BASE_URL>/graphql
+     */
+    @Provides
+    @Singleton
+    fun provideApolloClient(
+        @IdentityHttpClient okHttpClient: OkHttpClient,
+        @Named("baseUrl") baseUrl: String
+    ): ApolloClient {
+        return ApolloClient.Builder()
+            .serverUrl("$baseUrl/graphql")
+            .okHttpClient(okHttpClient)
+            .build()
+    }
+
+    @Provides
+    @Singleton
+    fun provideIdentityXGraphService(
+        apolloClient: ApolloClient
+    ): IdentityXGraphService {
+        return IdentityXGraphService(apolloClient)
     }
 }

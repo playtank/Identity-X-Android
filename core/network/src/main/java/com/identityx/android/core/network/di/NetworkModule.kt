@@ -6,6 +6,8 @@ import com.identityx.android.core.network.BuildConfig
 import com.identityx.android.core.network.data.AuthInterceptor
 import com.identityx.android.core.network.data.OkHttpTokenAuthenticator
 import com.identityx.android.core.network.graphql.IdentityXGraphService
+import com.identityx.android.core.network.industrial.IndustrialKtorApi
+import com.identityx.android.core.network.industrial.MockIndustrialClientProvider
 import com.identityx.android.core.network.restful.IdentityXApiClient
 import dagger.Module
 import dagger.Provides
@@ -111,4 +113,26 @@ object NetworkModule {
     ): IdentityXGraphService {
         return IdentityXGraphService(apolloClient)
     }
+
+    // ---------------------------------------------------------------------------
+    // Industrial edge telemetry — mock client until real backend is available
+    // ---------------------------------------------------------------------------
+
+    @Provides
+    @Named("industrialBaseUrl")
+    fun provideIndustrialBaseUrl(): String =
+        "https://edge-ingestion.yourplant.com"   // placeholder — replace when real endpoint exists
+
+    @Provides
+    @Named("industrialHttpClient")
+    @Singleton
+    fun provideIndustrialHttpClient(): io.ktor.client.HttpClient =
+        MockIndustrialClientProvider.create()   // swap to real OkHttp client when backend is ready
+
+    @Provides
+    @Singleton
+    fun provideIndustrialKtorApi(
+        @Named("industrialHttpClient") httpClient: io.ktor.client.HttpClient,
+        @Named("industrialBaseUrl") baseUrl: String
+    ): IndustrialKtorApi = IndustrialKtorApi(httpClient, baseUrl)
 }

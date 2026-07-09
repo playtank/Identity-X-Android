@@ -72,6 +72,9 @@ dependencies {
     implementation(libs.okhttp)
     implementation(libs.okhttp.logging.interceptor)
 
+    // Mock engine for industrial telemetry (no real backend yet)
+    implementation(libs.ktor.client.mock)
+
     // Coroutines
     implementation(libs.kotlinx.coroutines.core)
 

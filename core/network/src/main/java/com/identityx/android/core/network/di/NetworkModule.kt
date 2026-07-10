@@ -1,8 +1,12 @@
 package com.identityx.android.core.network.di
 
+import android.content.Context
+import android.net.ConnectivityManager
+import android.os.AsyncTask.execute
 import com.apollographql.apollo.ApolloClient
 import com.apollographql.apollo.network.okHttpClient
 import com.identityx.android.core.network.BuildConfig
+import com.identityx.android.core.network.NetworkMonitor
 import com.identityx.android.core.network.graphql.IdentityXGraphService
 import com.identityx.android.core.network.industrial.IndustrialKtorApi
 import com.identityx.android.core.network.industrial.MockIndustrialClientProvider
@@ -13,10 +17,12 @@ import com.identityx.local.domain.TokenProvider
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.engine.okhttp.OkHttp
+import io.ktor.client.plugins.HttpSend
 import io.ktor.client.plugins.auth.Auth
 import io.ktor.client.plugins.auth.providers.BearerTokens
 import io.ktor.client.plugins.auth.providers.bearer
@@ -25,6 +31,7 @@ import io.ktor.client.plugins.logging.LogLevel
 import io.ktor.client.plugins.logging.Logger
 import io.ktor.client.plugins.logging.Logging
 import io.ktor.client.plugins.logging.ANDROID
+import io.ktor.client.plugins.plugin
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
@@ -34,6 +41,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
+import java.io.IOException
 import java.util.concurrent.TimeUnit
 import javax.inject.Named
 import javax.inject.Qualifier
@@ -76,6 +84,15 @@ object NetworkModule {
             .build()
     }
 
+    @Provides
+    @Singleton
+    fun provideConnectivityManager(
+        @ApplicationContext context: Context // Hilt automatically provides the application context
+    ): ConnectivityManager {
+        // Ask the Android system framework to deliver the service
+        return context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+    }
+
     /**
      * Ktor HttpClient with:
      * - ContentNegotiation (kotlinx.serialization JSON)
@@ -91,9 +108,11 @@ object NetworkModule {
         @IdentityHttpClient okHttpClient: OkHttpClient,
         @Named("baseUrl") baseUrl: String,
         tokenProvider: TokenProvider,
-        sessionManager: SessionManager
+        sessionManager: SessionManager,
+        networkMonitor: NetworkMonitor,
     ): HttpClient {
-        return HttpClient(OkHttp) {
+        val client = HttpClient(OkHttp) {
+
             engine { preconfigured = okHttpClient }
 
             install(ContentNegotiation) {
@@ -138,6 +157,23 @@ object NetworkModule {
                 }
             }
         }
+        // We intercept the client pipeline directly before returning it to Hilt
+        client.plugin(HttpSend).intercept { request ->
+
+            // 1. Synchronously inspect our network snapshot state
+            // (Assuming you expose a quick synchronous check or value in your monitor)
+            val isOnline = networkMonitor.isCurrentlyConnected()
+
+            if (!isOnline) {
+                // Throwing this instantly bypasses the network engine,
+                // drops the loading face, and triggers your catch blocks/dialogs.
+                throw IOException("Network is completely unavailable.")
+            }
+
+            // 2. If online, let the request proceed naturally through Ktor and OkHttp
+            execute(request)
+        }
+        return client
     }
 
     @Provides

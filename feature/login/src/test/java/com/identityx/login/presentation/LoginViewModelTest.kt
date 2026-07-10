@@ -1,7 +1,6 @@
 package com.identityx.login.presentation
 
 import app.cash.turbine.test
-import com.identityx.login.bridge.LoginSessionPort
 import com.identityx.login.domain.model.LoginUiState.LoginStatus
 import com.identityx.login.domain.usecase.LoginAndFetchProfileUseCase
 import io.mockk.coEvery
@@ -24,13 +23,12 @@ class LoginViewModelTest {
 
     private val testDispatcher = StandardTestDispatcher()
     private val loginUseCase: LoginAndFetchProfileUseCase = mockk()
-    private val sessionBridge: LoginSessionPort = mockk(relaxed = true)
     private lateinit var viewModel: LoginViewModel
 
     @Before
     fun setUp() {
         Dispatchers.setMain(testDispatcher)
-        viewModel = LoginViewModel(loginUseCase, sessionBridge)
+        viewModel = LoginViewModel(loginUseCase)
     }
 
     @After

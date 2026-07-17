@@ -65,12 +65,16 @@ dependencies {
     implementation(libs.ktor.client.core)
     implementation(libs.ktor.client.okhttp)
     implementation(libs.ktor.client.content.negotiation)
+    implementation(libs.ktor.client.auth)
     implementation(libs.ktor.client.logging)
     implementation(libs.ktor.serialization.kotlinx.json.client)
 
     // OkHttp (available for interceptors, caching, or custom engine use)
     implementation(libs.okhttp)
     implementation(libs.okhttp.logging.interceptor)
+
+    // Mock engine for industrial telemetry (no real backend yet)
+    implementation(libs.ktor.client.mock)
 
     // Coroutines
     implementation(libs.kotlinx.coroutines.core)

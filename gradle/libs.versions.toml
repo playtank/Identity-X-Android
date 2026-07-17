@@ -46,6 +46,10 @@ turbineVersion = "1.2.0"
 playServicesAuth = "21.6.0"
 jetbrainsKotlinJvm = "2.1.21"
 room = "2.7.0-alpha11"
+workRuntimeKtx = "2.11.2"
+cameraCore = "1.6.1"
+hiltCommon = "1.4.0"
+litertlmJvm = "0.14.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -112,7 +116,9 @@ ktor-server-auth-jwt = { group = "io.ktor", name = "ktor-server-auth-jwt-jvm", v
 ktor-client-core = { group = "io.ktor", name = "ktor-client-core", version.ref = "ktor" }
 ktor-client-okhttp = { group = "io.ktor", name = "ktor-client-okhttp", version.ref = "ktor" }
 ktor-client-content-negotiation = { group = "io.ktor", name = "ktor-client-content-negotiation", version.ref = "ktor" }
+ktor-client-auth = { group = "io.ktor", name = "ktor-client-auth", version.ref = "ktor" }
 ktor-client-logging = { group = "io.ktor", name = "ktor-client-logging", version.ref = "ktor" }
+ktor-client-mock = { group = "io.ktor", name = "ktor-client-mock", version.ref = "ktor" }
 ktor-serialization-kotlinx-json-client = { group = "io.ktor", name = "ktor-serialization-kotlinx-json", version.ref = "ktor" }
 postgresql = { group = "org.postgresql", name = "postgresql", version.ref = "postgresql" }
 logback-classic = { group = "ch.qos.logback", name = "logback-classic", version.ref = "logback" }
@@ -121,6 +127,11 @@ logback-classic = { group = "ch.qos.logback", name = "logback-classic", version.
 room-runtime = { group = "androidx.room", name = "room-runtime", version.ref = "room" }
 room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = "room" }
 room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "room" }
+
+androidx-work-runtime-ktx = { group = "androidx.work", name = "work-runtime-ktx", version.ref = "workRuntimeKtx" }
+androidx-camera-core = { group = "androidx.camera", name = "camera-core", version.ref = "cameraCore" }
+androidx-hilt-common = { group = "androidx.hilt", name = "hilt-common", version.ref = "hiltCommon" }
+litertlm-jvm = { group = "com.google.ai.edge.litertlm", name = "litertlm-jvm", version.ref = "litertlmJvm" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

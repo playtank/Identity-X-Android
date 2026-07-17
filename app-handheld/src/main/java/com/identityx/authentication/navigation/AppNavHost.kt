@@ -9,7 +9,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.identityx.android.core.navigation.LoginActions
 import com.identityx.android.core.navigation.NavigationDestinations
-import com.identityx.android.core.network.session.SessionEventBus
+import com.identityx.android.core.network.session.SessionManager
 import com.identityx.authentication.ui.DashboardScreen
 import com.identityx.login.navigation.loginNavGraph
 
@@ -17,23 +17,19 @@ import com.identityx.login.navigation.loginNavGraph
  * Root NavHost for the handheld app.
  *
  * Owns all NavController calls — feature modules never import NavController.
- * Collects [SessionEventBus] to force-navigate to Login when both tokens expire.
+ * Observes [SessionManager.sessionState] to react to forced logout when both tokens expire.
  */
 @Composable
 fun AppNavHost(
     navController: NavHostController = rememberNavController(),
     startDestination: String = NavigationDestinations.LOGIN,
-    sessionEventBus: SessionEventBus
+    sessionManager: SessionManager
 ) {
-    // Force logout when OkHttpTokenAuthenticator signals session expiry
+    // Collect one-shot session expiry events from the network layer
     LaunchedEffect(Unit) {
-        sessionEventBus.events.collect { event ->
-            when (event) {
-                is SessionEventBus.SessionEvent.SessionExpired -> {
-                    navController.navigate(NavigationDestinations.LOGIN) {
-                        popUpTo(0) { inclusive = true } // clear entire back stack
-                    }
-                }
+        sessionManager.sessionState.collect { state ->
+            if (state is SessionManager.SessionState.Unauthenticated) {
+                backToLogin(navController)
             }
         }
     }
@@ -42,7 +38,6 @@ fun AppNavHost(
         navController = navController,
         startDestination = startDestination
     ) {
-        // Feature: Login
         loginNavGraph(
             actions = LoginActions(
                 onLoginSuccess = {
@@ -62,18 +57,15 @@ fun AppNavHost(
             )
         )
 
-        // Feature: Dashboard / Home
         composable(route = NavigationDestinations.HOME) {
             DashboardScreen(
                 onLogout = {
-                    navController.navigate(NavigationDestinations.LOGIN) {
-                        popUpTo(NavigationDestinations.HOME) { inclusive = true }
-                    }
+                    sessionManager.onLogout()
+                    backToLogin(navController)
                 }
             )
         }
 
-        // Placeholder destinations — replace with feature nav graphs when built
         composable(route = NavigationDestinations.REGISTRATION) {
             Text("Registration — coming soon")
         }
@@ -85,5 +77,15 @@ fun AppNavHost(
         composable(route = NavigationDestinations.SUPPORT) {
             Text("Support — coming soon")
         }
+    }
+}
+
+/**
+ * Navigates to Login and clears the entire back stack.
+ * Shared by manual logout and forced session expiry.
+ */
+private fun backToLogin(navController: NavHostController) {
+    navController.navigate(NavigationDestinations.LOGIN) {
+        popUpTo(0) { inclusive = true }
     }
 }

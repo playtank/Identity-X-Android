@@ -3,6 +3,7 @@ package com.identityx.login.data
 import com.identityx.android.core.network.model.AuthRequest
 import com.identityx.android.core.network.model.AuthResponse
 import com.identityx.android.core.network.restful.IdentityXApiClient
+import com.identityx.android.core.network.session.SessionManager
 import com.identityx.local.domain.TokenProvider
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -16,7 +17,9 @@ class RealLoginDataSourceTest {
 
     private val apiClient: IdentityXApiClient = mockk()
     private val tokenProvider: TokenProvider = mockk(relaxed = true)
-    private val dataSource = RealLoginDataSource(apiClient, tokenProvider)
+    private val sessionManager: SessionManager = mockk(relaxed = true)
+
+    private val dataSource = RealLoginDataSource(apiClient, tokenProvider, sessionManager)
 
     @Test
     fun `login success saves tokens and returns success`() = runTest {

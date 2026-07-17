@@ -7,6 +7,7 @@ import com.identityx.local.domain.TokenProvider
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import javax.inject.Singleton
+import androidx.core.content.edit
 
 /**
  * Stores access and refresh tokens in EncryptedSharedPreferences,
@@ -34,17 +35,17 @@ class EncryptedTokenProvider @Inject constructor(
     override fun getRefreshToken(): String? = sharedPrefs.getString(KEY_REFRESH, null)
 
     override fun saveTokens(accessToken: String, refreshToken: String) {
-        sharedPrefs.edit()
-            .putString(KEY_ACCESS, accessToken)
-            .putString(KEY_REFRESH, refreshToken)
-            .apply()
+        sharedPrefs.edit {
+            putString(KEY_ACCESS, accessToken)
+                .putString(KEY_REFRESH, refreshToken)
+        }
     }
 
     override fun clearTokens() {
-        sharedPrefs.edit()
-            .remove(KEY_ACCESS)
-            .remove(KEY_REFRESH)
-            .apply()
+        sharedPrefs.edit {
+            remove(KEY_ACCESS)
+                .remove(KEY_REFRESH)
+        }
     }
 
     companion object {

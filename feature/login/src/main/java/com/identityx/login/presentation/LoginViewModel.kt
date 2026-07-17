@@ -2,7 +2,6 @@ package com.identityx.login.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.identityx.login.bridge.LoginSessionPort
 import com.identityx.login.domain.model.LoginUiState
 import com.identityx.login.domain.model.LoginUiState.LoginStatus
 import com.identityx.login.domain.usecase.LoginAndFetchProfileUseCase
@@ -18,8 +17,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class LoginViewModel @Inject constructor(
-    private val loginUseCase: LoginAndFetchProfileUseCase,
-    private val sessionBridge: LoginSessionPort
+    private val loginUseCase: LoginAndFetchProfileUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(LoginUiState())
@@ -50,7 +48,6 @@ class LoginViewModel @Inject constructor(
                 onBiometricSuccess()
 
             is LoginUiIntent.BiometricDismissed ->
-                // Cancel or failure — silently return to Idle, no error shown
                 _uiState.update { it.copy(status = LoginStatus.Idle) }
         }
     }
@@ -72,10 +69,8 @@ class LoginViewModel @Inject constructor(
                 .onSuccess {
                     val state = _uiState.value
                     if (state.rememberUsername && state.biometricEnabled) {
-                        // Both checkboxes checked — hand off to biometric prompt
                         _uiState.update { it.copy(status = LoginStatus.BiometricPrompting) }
                     } else {
-                        // Normal login — navigate directly
                         _uiState.update { it.copy(status = LoginStatus.Idle) }
                         _navigationEvent.send(NavigationEvent.ToDashboard)
                     }
@@ -92,12 +87,6 @@ class LoginViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(status = LoginStatus.Idle) }
             _navigationEvent.send(NavigationEvent.ToDashboard)
-        }
-    }
-
-    fun onLogoutClicked() {
-        viewModelScope.launch {
-            sessionBridge.clearSessionOnGate()
         }
     }
 

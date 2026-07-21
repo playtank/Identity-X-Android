@@ -1,4 +1,8 @@
 package com.identityx.feature.security_agent.domain.model
 
-class TelemetryReport {
-}
+data class TelemetryReport(
+    val isVpnActive: Boolean,
+    val deviceOrientation: String,
+    val ipAddress: String,
+    val timestamp: Long = System.currentTimeMillis()
+)

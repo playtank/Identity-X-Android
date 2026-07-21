@@ -1,4 +1,7 @@
 package com.identityx.feature.security_agent.domain.model
 
-class SecurityRiskLevel {
+enum class SecurityRiskLevel {
+    LOW,
+    MEDIUM,
+    HIGH,
 }

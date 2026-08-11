@@ -8,6 +8,7 @@ package com.identityx.android.core.navigation
 object NavigationDestinations {
     const val LOGIN            = "login"
     const val HOME             = "home"
+    const val SCAN             = "scan"
     const val REGISTRATION     = "registration"
     const val FORGOT_PASSWORD  = "forgot_password"
     const val SUPPORT          = "support"

@@ -79,6 +79,7 @@ dependencies {
     implementation(project(":core:network"))
     implementation(project(":core:local"))
     implementation(project(":feature:login"))
+    implementation(project(":feature:industrial-capture"))
     implementation(project(":shared:edge-sync"))
 }
 ksp {

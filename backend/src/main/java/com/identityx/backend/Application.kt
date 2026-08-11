@@ -5,6 +5,7 @@ import com.auth0.jwt.algorithms.Algorithm
 import com.identityx.backend.auth.JwtConfig
 import com.identityx.backend.auth.TokenManager
 import com.identityx.backend.auth.authRoutes
+import com.identityx.backend.product.productRoutes
 import io.ktor.http.HttpStatusCode
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
@@ -80,6 +81,10 @@ fun Application.module() {
 }
 
 fun Application.configureRouting(tokenManager: TokenManager) {
+    val jdbcUrl  = backendProps.getProperty("neon.url")
+    val dbUser   = backendProps.getProperty("neon.user")
+    val dbPass   = backendProps.getProperty("neon.password")
+
     routing {
         // Health check
         get("/") {
@@ -91,7 +96,7 @@ fun Application.configureRouting(tokenManager: TokenManager) {
 
         // Protected routes — require valid access token
         authenticate("jwt-access") {
-            // GET /api/v1/profile — returns the authenticated user's profile
+            // GET /api/v1/profile
             get("/api/v1/profile") {
                 val principal = call.principal<JWTPrincipal>()
                 val userId = principal?.payload?.getClaim("userId")?.asString()
@@ -108,16 +113,16 @@ fun Application.configureRouting(tokenManager: TokenManager) {
                     )
                 )
             }
+
+            // GET /api/v1/products/{upc}
+            productRoutes(jdbcUrl, dbUser, dbPass)
         }
 
         // Database connectivity test
         get("/test-db") {
-            val jdbcUrl  = backendProps.getProperty("neon.url")
-            val user     = backendProps.getProperty("neon.user")
-            val password = backendProps.getProperty("neon.password")
             try {
                 Class.forName("org.postgresql.Driver")
-                DriverManager.getConnection(jdbcUrl, user, password).use { connection ->
+                DriverManager.getConnection(jdbcUrl, dbUser, dbPass).use { connection ->
                     val sql = "SELECT client_name FROM oauth_clients WHERE client_id = ?"
                     connection.prepareStatement(sql).use { statement ->
                         statement.setString(1, "identity-x-android")

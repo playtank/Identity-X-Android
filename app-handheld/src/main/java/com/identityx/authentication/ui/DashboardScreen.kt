@@ -32,6 +32,7 @@ import com.identityx.android.core.network.model.UserProfile
 @Composable
 fun DashboardScreen(
     onLogout: () -> Unit = {},
+    onScan: () -> Unit = {},
     viewModel: DashboardViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -39,6 +40,7 @@ fun DashboardScreen(
     DashboardScreenContent(
         uiState = uiState,
         onLogout = onLogout,
+        onScan = onScan,
         onRetry = { viewModel.loadProfile() }
     )
 }
@@ -47,6 +49,7 @@ fun DashboardScreen(
 private fun DashboardScreenContent(
     uiState: DashboardViewModel.DashboardUiState,
     onLogout: () -> Unit,
+    onScan: () -> Unit,
     onRetry: () -> Unit
 ) {
     Column(
@@ -67,14 +70,20 @@ private fun DashboardScreenContent(
             onRetry = onRetry
         )
 
-        // Always-visible refresh button — useful for manually re-fetching
-        // and for testing token refresh / forced logout behaviour
         OutlinedButton(
             onClick = onRetry,
             modifier = Modifier.fillMaxWidth(),
             enabled = uiState !is DashboardViewModel.DashboardUiState.Loading
         ) {
             Text("Refresh Profile")
+        }
+
+        // Scan product button
+        Button(
+            onClick = onScan,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("Scan Product")
         }
 
         Spacer(modifier = Modifier.weight(1f))
@@ -183,8 +192,7 @@ private fun ProfileRow(label: String, value: String) {
 private fun DashboardLoadingPreview() {
     DashboardScreenContent(
         uiState = DashboardViewModel.DashboardUiState.Loading,
-        onLogout = {},
-        onRetry = {}
+        onLogout = {}, onScan = {}, onRetry = {}
     )
 }
 
@@ -194,14 +202,11 @@ private fun DashboardSuccessPreview() {
     DashboardScreenContent(
         uiState = DashboardViewModel.DashboardUiState.Success(
             UserProfile(
-                userId      = "user_001",
-                email       = "test@identityx.com",
-                displayName = "Identity X User",
-                plan        = "Premium"
+                userId = "user_001", email = "test@identityx.com",
+                displayName = "Identity X User", plan = "Premium"
             )
         ),
-        onLogout = {},
-        onRetry = {}
+        onLogout = {}, onScan = {}, onRetry = {}
     )
 }
 
@@ -210,7 +215,6 @@ private fun DashboardSuccessPreview() {
 private fun DashboardErrorPreview() {
     DashboardScreenContent(
         uiState = DashboardViewModel.DashboardUiState.Error("Token expired"),
-        onLogout = {},
-        onRetry = {}
+        onLogout = {}, onScan = {}, onRetry = {}
     )
 }

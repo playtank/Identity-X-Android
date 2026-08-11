@@ -38,6 +38,10 @@ android {
 }
 
 dependencies {
+    implementation(project(":core:navigation"))
+    implementation(project(":core:network"))
+    implementation(project(":core:local"))
+
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
@@ -53,9 +57,7 @@ dependencies {
     ksp(libs.hilt.compiler)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.lifecycle.runtime.ktx)
-    implementation(project(":core:navigation"))
-    implementation(project(":core:network"))
-    implementation(project(":core:local"))
+
     implementation(libs.androidx.biometric)
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)

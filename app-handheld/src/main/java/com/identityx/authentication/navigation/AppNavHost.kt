@@ -3,6 +3,7 @@ package com.identityx.authentication.navigation
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -11,6 +12,8 @@ import com.identityx.android.core.navigation.LoginActions
 import com.identityx.android.core.navigation.NavigationDestinations
 import com.identityx.android.core.network.session.SessionManager
 import com.identityx.authentication.ui.DashboardScreen
+import com.identityx.industrial_capture.IndustrialCaptureScreen
+import com.identityx.industrial_capture.IndustrialCaptureViewModel
 import com.identityx.login.navigation.loginNavGraph
 
 /**
@@ -25,7 +28,6 @@ fun AppNavHost(
     startDestination: String = NavigationDestinations.LOGIN,
     sessionManager: SessionManager
 ) {
-    // Collect one-shot session expiry events from the network layer
     LaunchedEffect(Unit) {
         sessionManager.sessionState.collect { state ->
             if (state is SessionManager.SessionState.Unauthenticated) {
@@ -62,6 +64,20 @@ fun AppNavHost(
                 onLogout = {
                     sessionManager.onLogout()
                     backToLogin(navController)
+                },
+                onScan = {
+                    navController.navigate(NavigationDestinations.SCAN)
+                }
+            )
+        }
+
+        // Scan / barcode capture screen
+        composable(route = NavigationDestinations.SCAN) {
+            val viewModel: IndustrialCaptureViewModel = hiltViewModel()
+            IndustrialCaptureScreen(
+                viewModel = viewModel,
+                onNavigateBack = {
+                    navController.popBackStack()
                 }
             )
         }

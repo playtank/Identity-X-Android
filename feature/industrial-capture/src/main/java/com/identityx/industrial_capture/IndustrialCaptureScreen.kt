@@ -1,6 +1,7 @@
 package com.identityx.industrial_capture
 
 import android.Manifest
+import android.util.Log
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -135,7 +136,9 @@ private fun CaptureContent(
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
-    Box(modifier = modifier.fillMaxSize().background(Color.Black)) {
+    Box(modifier = modifier
+        .fillMaxSize()
+        .background(Color.Black)) {
 
         CameraPreview(
             modifier = Modifier.fillMaxSize(),
@@ -176,6 +179,35 @@ private fun CaptureContent(
 
         // Bottom sheet result
         when (val state = uiState) {
+            is IndustrialCaptureUiState.ProcessingProduct -> {
+                // Overlay shown while fetching product from backend
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color.Black.copy(alpha = 0.6f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        androidx.compose.material3.CircularProgressIndicator(
+                            color = Color.White,
+                            modifier = Modifier.padding(8.dp)
+                        )
+                        Text(
+                            text = "Looking up product…",
+                            color = Color.White,
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                        Text(
+                            text = state.upc,
+                            color = Color.White.copy(alpha = 0.6f),
+                            style = MaterialTheme.typography.labelSmall
+                        )
+                    }
+                }
+            }
             is IndustrialCaptureUiState.ProductFound -> {
                 ProductScanBottomSheet(
                     productName = state.product.name,

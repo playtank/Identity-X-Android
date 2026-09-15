@@ -8,7 +8,9 @@ import com.identityx.login.domain.usecase.LoginAndFetchProfileUseCase
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
+import io.mockk.just
 import io.mockk.mockk
+import io.mockk.runs
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
@@ -37,6 +39,9 @@ class LoginViewModelTest {
         // Default: device does not support biometrics — tests that need it override explicitly
         every { biometricChecker.isAvailable() } returns false
         every { userPrefs.getRememberedEmail() } returns null
+        // Stub write operations — called in onSuccess path; void returns need justRun
+        every { userPrefs.saveUserPreferences(any(), any()) } just runs
+        every { userPrefs.clearUserPreferences() } just runs
         viewModel = LoginViewModel(
             loginUseCase,
             userPrefs,

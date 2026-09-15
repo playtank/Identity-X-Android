@@ -2,6 +2,8 @@ package com.identityx.login.di
 
 import com.identityx.login.data.LoginDataSource
 import com.identityx.login.data.RealLoginDataSource
+import com.identityx.login.domain.biometric.BiometricAvailabilityChecker
+import com.identityx.login.domain.biometric.BiometricAvailabilityCheckerImpl
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -23,4 +25,10 @@ abstract class LoginDataSourceModule {
     abstract fun bindLoginDataSource(
         impl: RealLoginDataSource   // swap to MockLoginDataSource to use mock
     ): LoginDataSource
+
+    @Binds
+    @Singleton
+    abstract fun bindBiometricAvailabilityChecker(
+        impl: BiometricAvailabilityCheckerImpl
+    ): BiometricAvailabilityChecker
 }

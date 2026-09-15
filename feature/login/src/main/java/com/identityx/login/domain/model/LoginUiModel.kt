@@ -11,6 +11,8 @@ data class LoginUiState(
     val password: String = "",
     val rememberUsername: Boolean = false,
     val biometricEnabled: Boolean = false,
+    /** True when the device has biometric hardware capable of authenticating. */
+    val isBiometricAvailable: Boolean = false,
     val status: LoginStatus = LoginStatus.Idle
 ) {
     sealed interface LoginStatus {

@@ -1,13 +1,19 @@
 package com.identityx.login.presentation
 
 import app.cash.turbine.test
+import com.identityx.local.domain.UserPreferencesProvider
+import com.identityx.login.domain.biometric.BiometricAvailabilityChecker
 import com.identityx.login.domain.model.LoginUiState.LoginStatus
 import com.identityx.login.domain.usecase.LoginAndFetchProfileUseCase
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.every
+import io.mockk.just
 import io.mockk.mockk
+import io.mockk.runs
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
@@ -23,12 +29,24 @@ class LoginViewModelTest {
 
     private val testDispatcher = StandardTestDispatcher()
     private val loginUseCase: LoginAndFetchProfileUseCase = mockk()
+    private val userPrefs: UserPreferencesProvider = mockk()
+    private val biometricChecker: BiometricAvailabilityChecker = mockk()
     private lateinit var viewModel: LoginViewModel
 
     @Before
     fun setUp() {
         Dispatchers.setMain(testDispatcher)
-        viewModel = LoginViewModel(loginUseCase)
+        // Default: device does not support biometrics — tests that need it override explicitly
+        every { biometricChecker.isAvailable() } returns false
+        every { userPrefs.getRememberedEmail() } returns null
+        // Stub write operations — called in onSuccess path; void returns need justRun
+        every { userPrefs.saveUserPreferences(any(), any()) } just runs
+        every { userPrefs.clearUserPreferences() } just runs
+        viewModel = LoginViewModel(
+            loginUseCase,
+            userPrefs,
+            biometricChecker
+        )
     }
 
     @After
@@ -154,7 +172,7 @@ class LoginViewModelTest {
     fun `Submit while Loading is ignored`() = runTest {
         // Put viewModel into Loading by submitting once
         coEvery { loginUseCase(any(), any()) } coAnswers {
-            kotlinx.coroutines.delay(5_000)
+            delay(5_000)
             Result.success(Unit)
         }
         viewModel.onIntent(LoginUiIntent.EmailChanged("user@test.com"))

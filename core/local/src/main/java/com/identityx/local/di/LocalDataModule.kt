@@ -5,6 +5,7 @@ import androidx.room.Room
 import com.identityx.local.AppDatabase
 import com.identityx.local.EncryptedTokenProvider
 import com.identityx.local.domain.TokenProvider
+import com.identityx.local.domain.UserPreferencesProvider
 import com.identityx.local.energy.EnergyAccountDao
 import dagger.Binds
 import dagger.Module
@@ -26,6 +27,12 @@ abstract class LocalBindsModule {
     abstract fun bindTokenProvider(
         encryptedTokenProvider: EncryptedTokenProvider
     ): TokenProvider
+
+    @Binds
+    @Singleton
+    abstract fun bindUserPreferencesProvider(
+        encryptedTokenProvider: EncryptedTokenProvider
+    ): UserPreferencesProvider
 }
 
 @Module

@@ -1,12 +1,13 @@
 package com.identityx.login.presentation
 
-import android.content.Context
 import app.cash.turbine.test
 import com.identityx.local.domain.UserPreferencesProvider
+import com.identityx.login.domain.biometric.BiometricAvailabilityChecker
 import com.identityx.login.domain.model.LoginUiState.LoginStatus
 import com.identityx.login.domain.usecase.LoginAndFetchProfileUseCase
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -27,16 +28,19 @@ class LoginViewModelTest {
     private val testDispatcher = StandardTestDispatcher()
     private val loginUseCase: LoginAndFetchProfileUseCase = mockk()
     private val userPrefs: UserPreferencesProvider = mockk()
-    private val context: Context = mockk()
+    private val biometricChecker: BiometricAvailabilityChecker = mockk()
     private lateinit var viewModel: LoginViewModel
 
     @Before
     fun setUp() {
         Dispatchers.setMain(testDispatcher)
+        // Default: device does not support biometrics — tests that need it override explicitly
+        every { biometricChecker.isAvailable() } returns false
+        every { userPrefs.getRememberedEmail() } returns null
         viewModel = LoginViewModel(
             loginUseCase,
             userPrefs,
-            context
+            biometricChecker
         )
     }
 

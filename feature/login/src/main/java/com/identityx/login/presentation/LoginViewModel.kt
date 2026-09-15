@@ -1,16 +1,13 @@
 package com.identityx.login.presentation
 
-import android.content.Context
-import androidx.biometric.BiometricManager
-import androidx.biometric.BiometricManager.Authenticators.BIOMETRIC_STRONG
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.identityx.local.domain.UserPreferencesProvider
+import com.identityx.login.domain.biometric.BiometricAvailabilityChecker
 import com.identityx.login.domain.model.LoginUiState
 import com.identityx.login.domain.model.LoginUiState.LoginStatus
 import com.identityx.login.domain.usecase.LoginAndFetchProfileUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -24,7 +21,7 @@ import javax.inject.Inject
 class LoginViewModel @Inject constructor(
     private val loginUseCase: LoginAndFetchProfileUseCase,
     private val userPrefs: UserPreferencesProvider,
-    @ApplicationContext private val context: Context
+    private val biometricChecker: BiometricAvailabilityChecker
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(LoginUiState())
@@ -35,9 +32,7 @@ class LoginViewModel @Inject constructor(
 
     init {
         // Check whether this device has biometric hardware ready to authenticate
-        val biometricManager = BiometricManager.from(context)
-        val biometricAvailable =
-            biometricManager.canAuthenticate(BIOMETRIC_STRONG) == BiometricManager.BIOMETRIC_SUCCESS
+        val biometricAvailable = biometricChecker.isAvailable()
 
         // Restore remembered email and biometric preference on cold start
         val rememberedEmail = userPrefs.getRememberedEmail()

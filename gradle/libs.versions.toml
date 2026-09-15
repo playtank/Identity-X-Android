@@ -130,6 +130,7 @@ ktor-client-content-negotiation = { group = "io.ktor", name = "ktor-client-conte
 ktor-client-auth = { group = "io.ktor", name = "ktor-client-auth", version.ref = "ktor" }
 ktor-client-logging = { group = "io.ktor", name = "ktor-client-logging", version.ref = "ktor" }
 ktor-client-mock = { group = "io.ktor", name = "ktor-client-mock", version.ref = "ktor" }
+ktor-client-cio = { group = "io.ktor", name = "ktor-client-cio", version.ref = "ktor" }
 ktor-serialization-kotlinx-json-client = { group = "io.ktor", name = "ktor-serialization-kotlinx-json", version.ref = "ktor" }
 postgresql = { group = "org.postgresql", name = "postgresql", version.ref = "postgresql" }
 logback-classic = { group = "ch.qos.logback", name = "logback-classic", version.ref = "logback" }
@@ -167,3 +168,4 @@ apollo3 = { id = "com.apollographql.apollo", version.ref = "apolloRuntime" }
 jetbrains-kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "jetbrainsKotlinJvm" }
 kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
 android-kotlin-multiplatform-library = { id = "com.android.kotlin.multiplatform.library", version.ref = "agp" }
+kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }

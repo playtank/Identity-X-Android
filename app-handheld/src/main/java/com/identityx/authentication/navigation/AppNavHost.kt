@@ -29,9 +29,17 @@ fun AppNavHost(
     sessionManager: SessionManager
 ) {
     LaunchedEffect(Unit) {
+        // Skip the initial Unauthenticated / Authenticating state emitted at startup.
+        // Only force-navigate to login if the session expires AFTER the user has
+        // already reached the Authenticated state (i.e. a mid-session token expiry).
+        var hasBeenAuthenticated = false
         sessionManager.sessionState.collect { state ->
-            if (state is SessionManager.SessionState.Unauthenticated) {
-                backToLogin(navController)
+            when (state) {
+                is SessionManager.SessionState.Authenticated -> hasBeenAuthenticated = true
+                is SessionManager.SessionState.Unauthenticated -> {
+                    if (hasBeenAuthenticated) backToLogin(navController)
+                }
+                else -> Unit
             }
         }
     }

@@ -1,6 +1,8 @@
 package com.identityx.login.presentation
 
+import android.content.Context
 import app.cash.turbine.test
+import com.identityx.local.domain.UserPreferencesProvider
 import com.identityx.login.domain.model.LoginUiState.LoginStatus
 import com.identityx.login.domain.usecase.LoginAndFetchProfileUseCase
 import io.mockk.coEvery
@@ -8,6 +10,7 @@ import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
@@ -23,12 +26,18 @@ class LoginViewModelTest {
 
     private val testDispatcher = StandardTestDispatcher()
     private val loginUseCase: LoginAndFetchProfileUseCase = mockk()
+    private val userPrefs: UserPreferencesProvider = mockk()
+    private val context: Context = mockk()
     private lateinit var viewModel: LoginViewModel
 
     @Before
     fun setUp() {
         Dispatchers.setMain(testDispatcher)
-        viewModel = LoginViewModel(loginUseCase)
+        viewModel = LoginViewModel(
+            loginUseCase,
+            userPrefs,
+            context
+        )
     }
 
     @After
@@ -154,7 +163,7 @@ class LoginViewModelTest {
     fun `Submit while Loading is ignored`() = runTest {
         // Put viewModel into Loading by submitting once
         coEvery { loginUseCase(any(), any()) } coAnswers {
-            kotlinx.coroutines.delay(5_000)
+            delay(5_000)
             Result.success(Unit)
         }
         viewModel.onIntent(LoginUiIntent.EmailChanged("user@test.com"))

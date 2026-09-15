@@ -192,7 +192,8 @@ private fun LoginScreenContent(
             }
 
             // Enable biometric checkbox — only shown when Remember username is checked
-            if (uiState.rememberUsername) {
+            // AND the device has biometric hardware with enrolled credentials
+            if (uiState.rememberUsername && uiState.isBiometricAvailable) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically

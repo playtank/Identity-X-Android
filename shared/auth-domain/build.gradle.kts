@@ -9,6 +9,7 @@ plugins {
     // module (e.g. :feature:login or :app-handheld) where plain com.android.library + KSP
     // are still fully supported.
     alias(libs.plugins.android.kotlin.multiplatform.library)
+    kotlin("native.cocoapods")
 }
 
 kotlin {
@@ -36,6 +37,26 @@ kotlin {
     // layer without pulling in AGP.
     jvm()
 
+    // ── iOS Targets ───────────────────────────────────────────────────────────
+    // 2. 添加 iOS Apple 平台编译目标
+    iosX64()
+    iosArm64()
+    iosSimulatorArm64()
+
+    // ── CocoaPods Config ──────────────────────────────────────────────────────
+    // 3. 👈 添加 CocoaPods 导出配置，生成 SharedAuthDomain.podspec
+    cocoapods {
+        name = "SharedAuthDomain"
+        summary = "Identity-X Auth Domain KMP Module"
+        homepage = "https://github.com/your-repo/Identity-X"
+        version = "1.0.0"
+        ios.deploymentTarget = "15.0"
+
+        framework {
+            baseName = "SharedAuthDomain"
+            isStatic = true
+        }
+    }
     // ── Source sets ───────────────────────────────────────────────────────────
     sourceSets {
         commonMain.dependencies {

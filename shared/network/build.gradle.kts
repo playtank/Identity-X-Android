@@ -35,6 +35,12 @@ kotlin {
             implementation(project(":shared:local"))
             implementation(libs.kotlinx.coroutines.core)
 
+            // javax.inject — provides @Inject, @Singleton, @Named annotations.
+            // This is the standalone JSR-330 artifact, not Hilt-specific.
+            // Needed in commonMain so all KMP targets (Android, JVM, future iOS) can
+            // use these annotations without pulling in the full Hilt/Dagger runtime.
+            implementation(libs.javax.inject)
+
             // Ktor client — engine-agnostic; engines wired per-target below
             implementation(libs.ktor.client.core)
             implementation(libs.ktor.client.content.negotiation)

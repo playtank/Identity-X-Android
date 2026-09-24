@@ -1,5 +1,5 @@
 Pod::Spec.new do |spec|
-    spec.name                     = 'auth_domain'
+    spec.name                     = 'SharedAuthDomain'
     spec.version                  = '1.0.0'
     spec.homepage                 = 'https://github.com/your-repo/Identity-X'
     spec.source                   = { :http=> ''}
@@ -33,7 +33,7 @@ Pod::Spec.new do |spec|
                 
     spec.script_phases = [
         {
-            :name => 'Build auth_domain',
+            :name => 'Build SharedAuthDomain',
             :execution_position => :before_compile,
             :shell_path => '/bin/sh',
             :script => <<-SCRIPT

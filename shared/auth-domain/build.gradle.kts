@@ -46,6 +46,7 @@ kotlin {
     // ── CocoaPods Config ──────────────────────────────────────────────────────
     // 3. 👈 添加 CocoaPods 导出配置，生成 SharedAuthDomain.podspec
     cocoapods {
+        name = "SharedAuthDomain"
         summary = "Identity-X Auth Domain KMP Module"
         homepage = "https://github.com/your-repo/Identity-X"
         version = "1.0.0"

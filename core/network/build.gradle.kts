@@ -4,20 +4,16 @@ plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.ksp)
     alias(libs.plugins.dagger.hilt.android)
-    alias(libs.plugins.apollo3)
-    id("org.jetbrains.kotlin.plugin.serialization") version "2.1.21"
 }
 
 val localProps = Properties().apply {
     val f = rootProject.file("local.properties")
     if (f.exists()) f.inputStream().use { load(it) }
 }
-
-// Fallback to emulator loopback if DEBUG_BASE_URL is not set in local.properties
 val debugBaseUrl = localProps.getProperty("DEBUG_BASE_URL", "http://10.0.2.2:8080")
 
 android {
-    namespace = "com.identityx.android.core.network"
+    namespace = "com.identityx.android.core.network.shell"
     compileSdk = 36
 
     defaultConfig {
@@ -29,15 +25,13 @@ android {
         buildConfig = true
     }
     buildTypes {
-        // Debug: reads from local.properties → DEBUG_BASE_URL
-        // Falls back to 10.0.2.2:8080 (emulator loopback) if not set
         getByName("debug") {
             buildConfigField("String", "BASE_URL", "\"$debugBaseUrl\"")
+            buildConfigField("Boolean", "ENABLE_NETWORK_LOGGING", "true")
         }
-
-        // Release: points to production server
         getByName("release") {
             buildConfigField("String", "BASE_URL", "\"https://api.identityx.com\"")
+            buildConfigField("Boolean", "ENABLE_NETWORK_LOGGING", "false")
             isMinifyEnabled = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
@@ -52,40 +46,33 @@ android {
 }
 
 dependencies {
-    implementation(project(":core:local"))
-    implementation(libs.androidx.core.ktx)
-    implementation(libs.play.services.auth)
-    testImplementation(libs.junit)
-    androidTestImplementation(libs.androidx.junit)
-    androidTestImplementation(libs.androidx.espresso.core)
+    // Re-export the KMP module — all existing consumers keep compiling unchanged
+    api(project(":shared:network"))
+
+    // shared:local is a transitive dep via shared:network, but NetworkModule.kt
+    // directly imports TokenProvider from com.identityx.local.domain — needs to
+    // be explicit on this module's own compile classpath
+    implementation(project(":shared:local"))
+
+    // Hilt — plugin runs here, not in :shared:network
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
 
-    // Ktor client
+    // NetworkModule.kt directly references these — must be on this module's compile classpath
     implementation(libs.ktor.client.core)
     implementation(libs.ktor.client.okhttp)
     implementation(libs.ktor.client.content.negotiation)
     implementation(libs.ktor.client.auth)
     implementation(libs.ktor.client.logging)
+    implementation(libs.ktor.client.mock)
     implementation(libs.ktor.serialization.kotlinx.json.client)
-
-    // OkHttp (available for interceptors, caching, or custom engine use)
     implementation(libs.okhttp)
     implementation(libs.okhttp.logging.interceptor)
-
-    // Mock engine for industrial telemetry (no real backend yet)
-    implementation(libs.ktor.client.mock)
-
-    // Coroutines
-    implementation(libs.kotlinx.coroutines.core)
-
-    // Apollo GraphQL client
     implementation(libs.apollo.runtime)
-}
+    implementation(libs.kotlinx.coroutines.core)
+    implementation(libs.androidx.core.ktx)
 
-apollo {
-    service("identityx") {
-        packageName.set("com.identityx.android.core.network.graphql.generated")
-        srcDir("src/main/graphql")
-    }
+    testImplementation(libs.junit)
+    androidTestImplementation(libs.androidx.junit)
+    androidTestImplementation(libs.androidx.espresso.core)
 }

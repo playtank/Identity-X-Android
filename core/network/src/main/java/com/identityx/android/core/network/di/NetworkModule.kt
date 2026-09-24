@@ -2,10 +2,9 @@ package com.identityx.android.core.network.di
 
 import android.content.Context
 import android.net.ConnectivityManager
-import android.os.AsyncTask.execute
 import com.apollographql.apollo.ApolloClient
 import com.apollographql.apollo.network.okHttpClient
-import com.identityx.android.core.network.BuildConfig
+import com.identityx.android.core.network.shell.BuildConfig
 import com.identityx.android.core.network.NetworkMonitor
 import com.identityx.android.core.network.graphql.IdentityXGraphService
 import com.identityx.android.core.network.industrial.IndustrialKtorApi
@@ -52,7 +51,7 @@ import javax.inject.Singleton
 @Retention(AnnotationRetention.BINARY)
 annotation class IdentityHttpClient
 
-// Internal request model used only for the token refresh call inside the Auth plugin
+// Used only for the token refresh call inside the Auth plugin
 @Serializable
 private data class RefreshBody(val refreshToken: String)
 
@@ -64,17 +63,15 @@ object NetworkModule {
     @Named("baseUrl")
     fun provideBaseUrl(): String = BuildConfig.BASE_URL
 
-    /**
-     * Plain OkHttpClient — used only as the Ktor engine transport and by Apollo.
-     * Auth logic has moved to Ktor's [Auth] plugin — no interceptors or authenticator here.
-     */
     @Provides
     @Singleton
     @IdentityHttpClient
     fun provideOkHttpClient(): OkHttpClient {
         val logging = HttpLoggingInterceptor().apply {
-            level = if (BuildConfig.DEBUG) HttpLoggingInterceptor.Level.BODY
-                    else HttpLoggingInterceptor.Level.NONE
+            level = if (BuildConfig.ENABLE_NETWORK_LOGGING)
+                HttpLoggingInterceptor.Level.BODY
+            else
+                HttpLoggingInterceptor.Level.NONE
         }
         return OkHttpClient.Builder()
             .connectTimeout(15, TimeUnit.SECONDS)
@@ -88,21 +85,10 @@ object NetworkModule {
     @Provides
     @Singleton
     fun provideConnectivityManager(
-        @ApplicationContext context: Context // Hilt automatically provides the application context
-    ): ConnectivityManager {
-        // Ask the Android system framework to deliver the service
-        return context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-    }
+        @ApplicationContext context: Context
+    ): ConnectivityManager =
+        context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
 
-    /**
-     * Ktor HttpClient with:
-     * - ContentNegotiation (kotlinx.serialization JSON)
-     * - Logging (Android logcat, body-level in debug)
-     * - Auth bearer plugin:
-     *     loadTokens   → reads current access + refresh token from [TokenProvider]
-     *     refreshTokens → calls /api/v1/auth/refresh, saves new tokens, signals forced
-     *                     logout via [SessionManager] if refresh fails
-     */
     @Provides
     @Singleton
     fun provideHttpClient(
@@ -113,13 +99,12 @@ object NetworkModule {
         networkMonitor: NetworkMonitor,
     ): HttpClient {
         val client = HttpClient(OkHttp) {
-
             engine { preconfigured = okHttpClient }
 
             install(HttpTimeout) {
-                connectTimeoutMillis = 4_000   // 2 seconds to connect (Fails fast if server is dead)
-                requestTimeoutMillis = 5_000   // 4 seconds maximum for normal API payloads
-                socketTimeoutMillis  = 5_000   // 4 seconds max inactivity between data packets
+                connectTimeoutMillis = 4_000
+                requestTimeoutMillis = 5_000
+                socketTimeoutMillis  = 5_000
             }
 
             install(ContentNegotiation) {
@@ -128,11 +113,21 @@ object NetworkModule {
 
             install(Logging) {
                 logger = Logger.ANDROID
-                level  = if (BuildConfig.DEBUG) LogLevel.BODY else LogLevel.NONE
+                level  = if (BuildConfig.ENABLE_NETWORK_LOGGING) LogLevel.BODY else LogLevel.NONE
             }
 
             install(Auth) {
                 bearer {
+                    // Only attach the Bearer token to requests that actually need it.
+                    // Auth endpoints are public — sending an old/expired token there
+                    // causes a spurious refresh attempt that logs the user out.
+                    sendWithoutRequest { request ->
+                        val url = request.url.toString()
+                        !url.contains("/api/v1/auth/login") &&
+                        !url.contains("/api/v1/auth/refresh") &&
+                        !url.contains("/api/v1/auth/logout")
+                    }
+
                     loadTokens {
                         val access  = tokenProvider.getAccessToken()  ?: return@loadTokens null
                         val refresh = tokenProvider.getRefreshToken() ?: return@loadTokens null
@@ -146,16 +141,14 @@ object NetworkModule {
                             return@refreshTokens null
                         }
                         try {
-                            val response: AuthResponse = client.post("$baseUrl/api/v1/auth/refresh") {
-                                markAsRefreshTokenRequest()
-                                contentType(ContentType.Application.Json)
-                                setBody(RefreshBody(refreshToken = currentRefresh))
-                            }.body()
+                            val response: AuthResponse =
+                                client.post("$baseUrl/api/v1/auth/refresh") {
+                                    markAsRefreshTokenRequest()
+                                    contentType(ContentType.Application.Json)
+                                    setBody(RefreshBody(refreshToken = currentRefresh))
+                                }.body()
                             tokenProvider.saveTokens(response.accessToken, response.refreshToken)
-                            BearerTokens(
-                                accessToken  = response.accessToken,
-                                refreshToken = response.refreshToken
-                            )
+                            BearerTokens(response.accessToken, response.refreshToken)
                         } catch (e: Exception) {
                             sessionManager.onSessionExpired()
                             null
@@ -164,22 +157,13 @@ object NetworkModule {
                 }
             }
         }
-        // We intercept the client pipeline directly before returning it to Hilt
+
         client.plugin(HttpSend).intercept { request ->
-
-            // 1. Synchronously inspect our network snapshot state
-            // (Assuming you expose a quick synchronous check or value in your monitor)
-            val isOnline = networkMonitor.isCurrentlyConnected()
-
-            if (!isOnline) {
-                // Throwing this instantly bypasses the network engine,
-                // drops the loading face, and triggers your catch blocks/dialogs.
+            if (!networkMonitor.isCurrentlyConnected())
                 throw IOException("Network is completely unavailable.")
-            }
-
-            // 2. If online, let the request proceed naturally through Ktor and OkHttp
             execute(request)
         }
+
         return client
     }
 
@@ -190,10 +174,6 @@ object NetworkModule {
         @Named("baseUrl") baseUrl: String
     ): IdentityXApiClient = IdentityXApiClient(httpClient, baseUrl)
 
-    /**
-     * Apollo GraphQL client — reuses the same plain OkHttpClient for transport.
-     * Not used yet — wire [IdentityXGraphService] into a repository when the schema is ready.
-     */
     @Provides
     @Singleton
     fun provideApolloClient(
@@ -206,10 +186,10 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideIdentityXGraphService(apolloClient: ApolloClient): IdentityXGraphService =
-        IdentityXGraphService(apolloClient)
+    fun provideIdentityXGraphService(
+        apolloClient: ApolloClient
+    ): IdentityXGraphService = IdentityXGraphService(apolloClient)
 
-    // Industrial edge telemetry — mock client until real backend is available
     @Provides
     @Named("industrialBaseUrl")
     fun provideIndustrialBaseUrl(): String = "https://edge-ingestion.yourplant.com"

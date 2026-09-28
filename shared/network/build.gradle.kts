@@ -30,16 +30,18 @@ kotlin {
     // JVM target — consumed by :backend (Ktor server)
     jvm()
 
+    // ── iOS Targets ───────────────────────────────────────────────────────────
+    iosX64()
+    iosArm64()
+    iosSimulatorArm64()
+
     sourceSets {
         commonMain.dependencies {
             implementation(project(":shared:local"))
             implementation(libs.kotlinx.coroutines.core)
 
             // javax.inject — provides @Inject, @Singleton, @Named annotations.
-            // This is the standalone JSR-330 artifact, not Hilt-specific.
-            // Needed in commonMain so all KMP targets (Android, JVM, future iOS) can
-            // use these annotations without pulling in the full Hilt/Dagger runtime.
-            implementation(libs.javax.inject)
+            // NOTE: only moved to androidMain/jvmMain — iOS uses no-op stubs in iosMain.
 
             // Ktor client — engine-agnostic; engines wired per-target below
             implementation(libs.ktor.client.core)
@@ -54,7 +56,7 @@ kotlin {
         }
 
         androidMain.dependencies {
-            // OkHttp engine for Android (Darwin engine added when iOS target lands)
+            // OkHttp engine for Android
             implementation(libs.ktor.client.okhttp)
             implementation(libs.okhttp)
             implementation(libs.okhttp.logging.interceptor)
@@ -62,11 +64,20 @@ kotlin {
             // Hilt runtime needed for @Inject annotations in NetworkMonitor
             // (no Hilt plugin here — the @Module wiring lives in :core:network)
             implementation(libs.hilt.android)
+            // JSR-330 DI annotations — Android/JVM only; iOS uses no-op stubs
+            implementation(libs.javax.inject)
         }
 
         jvmMain.dependencies {
             // CIO engine for the :backend JVM target
             implementation(libs.ktor.client.cio)
+            // JSR-330 DI annotations
+            implementation(libs.javax.inject)
+        }
+
+        // Darwin engine for iOS — NSURLSession-backed, required for all Apple targets
+        iosMain.dependencies {
+            implementation(libs.ktor.client.darwin)
         }
 
         commonTest.dependencies {

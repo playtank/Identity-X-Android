@@ -16,6 +16,7 @@ import com.identityx.auth_domain.data.LoginRepository
 class LoginUseCase(
     private val repository: LoginRepository
 ) {
+    @Throws(Exception::class)
     suspend operator fun invoke(email: String, password: String): Result<Unit> =
         repository.login(email, password)
 }

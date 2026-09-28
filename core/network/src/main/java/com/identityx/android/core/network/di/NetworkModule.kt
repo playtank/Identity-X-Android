@@ -11,6 +11,7 @@ import com.identityx.android.core.network.industrial.IndustrialKtorApi
 import com.identityx.android.core.network.industrial.MockIndustrialClientProvider
 import com.identityx.android.core.network.model.AuthResponse
 import com.identityx.android.core.network.restful.IdentityXApiClient
+import com.identityx.android.core.network.session.SessionEventBus
 import com.identityx.android.core.network.session.SessionManager
 import com.identityx.local.domain.TokenProvider
 import dagger.Module
@@ -166,6 +167,17 @@ object NetworkModule {
 
         return client
     }
+
+    @Provides
+    @Singleton
+    fun provideSessionEventBus(): SessionEventBus = SessionEventBus()
+
+    @Provides
+    @Singleton
+    fun provideSessionManager(
+        tokenProvider: TokenProvider,
+        sessionEventBus: SessionEventBus
+    ): SessionManager = SessionManager(tokenProvider, sessionEventBus)
 
     @Provides
     @Singleton

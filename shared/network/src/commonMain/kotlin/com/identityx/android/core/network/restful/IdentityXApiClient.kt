@@ -11,9 +11,8 @@ import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
-import javax.inject.Inject
 
-class IdentityXApiClient @Inject constructor(
+class IdentityXApiClient(
     private val client: HttpClient,
     private val baseUrl: String
 ) {

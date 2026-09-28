@@ -2,27 +2,36 @@
 //  MockLoginDataSource.swift
 //  iosApp
 //
-//  Fake data source for SwiftUI Previews and UI testing.
-//  Mirrors Android's MockLoginDataSource.
+//  Fake LoginDataSource for SwiftUI Previews and UI testing.
+//  Set shouldFail = true to exercise the error path.
 //
-//  Default behaviour: succeeds after a short delay.
-//  Set `shouldFail = true` to exercise the error path.
+//  KMP suspend fun login() bridges as a completion handler in Swift,
+//  not as async throws.
 //
 
 import Foundation
 import SharedAuthDomain
 
-final class MockLoginDataSource: NSObject, SharedAuthDomainLoginDataSource {
+final class MockLoginDataSource: NSObject, LoginDataSource {
 
-    var shouldFail  = false
+    var shouldFail = false
     var delayMs: UInt64 = 600
 
-    func login(email: String, password: String) async throws -> SharedAuthDomainKotlinUnit {
-        try await Task.sleep(nanoseconds: delayMs * 1_000_000)
-
-        if shouldFail {
-            throw LoginError.serverError("Invalid email or password")
+    func login(
+        email: String,
+        password: String,
+        completionHandler: @escaping (Any?, Error?) -> Void
+    ) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + .milliseconds(Int(delayMs))) {
+            if self.shouldFail {
+                completionHandler(
+                    nil,
+                    NSError(domain: "MockLogin", code: 401,
+                            userInfo: [NSLocalizedDescriptionKey: "Invalid email or password"])
+                )
+            } else {
+                completionHandler(KotlinUnit.shared, nil)
+            }
         }
-        return SharedAuthDomainKotlinUnit.shared
     }
 }

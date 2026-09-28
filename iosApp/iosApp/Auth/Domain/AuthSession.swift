@@ -2,49 +2,57 @@
 //  AuthSession.swift
 //  iosApp
 //
-//  Observable session state — the single source of truth for whether the user
-//  is logged in. Equivalent of Android's SessionManager.
+//  Observable session state — single source of truth for login status.
+//  Conforms to SessionCallback so Kotlin's RealLoginDataSource can notify
+//  it directly after a successful login.
 //
-//  Any view or ViewModel that needs to react to login/logout observes this object.
+//  THREADING: Kotlin calls onLoginSuccess() from a background coroutine thread.
+//  We must dispatch back to the main thread before mutating @Published properties.
+//  The class is NOT @MainActor so Kotlin can call it freely; individual
+//  mutations are explicitly dispatched to main.
 //
 
 import Foundation
+import Combine
+import SharedAuthDomain
 
-@MainActor
-final class AuthSession: ObservableObject {
+final class AuthSession: NSObject, ObservableObject, SessionCallback {
 
-    // MARK: - Published state
+    // MARK: - Published state (mutate only on main thread)
 
-    /// `true` when valid tokens are present in the Keychain.
-    @Published private(set) var isLoggedIn: Bool
+    @Published private(set) var isLoggedIn: Bool = false
 
     // MARK: - Dependencies
 
-    private let tokenStore: KeychainTokenStore
-    private let userPrefs: UserPreferencesStore
+    private var tokenProvider: (any LocalTokenProvider)?
 
     // MARK: - Init
 
-    init(
-        tokenStore: KeychainTokenStore = .shared,
-        userPrefs: UserPreferencesStore = .shared
-    ) {
-        self.tokenStore = tokenStore
-        self.userPrefs  = userPrefs
-        // Restore session from Keychain on cold start.
-        self.isLoggedIn = tokenStore.hasTokens
+    override init() {
+        super.init()
+    }
+
+    /// Called by AppContainer after LoginServiceFactory returns.
+    func configure(tokenProvider: any LocalTokenProvider) {
+        self.tokenProvider = tokenProvider
+        // Already on main thread at app startup
+        self.isLoggedIn = tokenProvider.getAccessToken() != nil
+    }
+
+    // MARK: - SessionCallback  (called from Kotlin background thread)
+
+    func onLoginSuccess() {
+        DispatchQueue.main.async {
+            self.isLoggedIn = true
+        }
     }
 
     // MARK: - Session lifecycle
 
-    /// Called by the login data source after tokens are persisted.
-    func onLoginSuccess() {
-        isLoggedIn = true
-    }
-
-    /// Clears tokens and user preferences, then routes back to login.
     func logout() {
-        tokenStore.clearTokens()
-        isLoggedIn = false
+        tokenProvider?.clearTokens()
+        DispatchQueue.main.async {
+            self.isLoggedIn = false
+        }
     }
 }

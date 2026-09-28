@@ -9,7 +9,7 @@ EXTERNAL SOURCES:
     :path: "../shared/auth-domain"
 
 SPEC CHECKSUMS:
-  SharedAuthDomain: ea807d27f3668fd00ae9add91470efdafb888478
+  SharedAuthDomain: bc8dbc3b2c3385d73e5559f257d5ba15b5927806
 
 PODFILE CHECKSUM: def2e3e3677ec52c7d1bcccb64a6d8479db77b3c
 

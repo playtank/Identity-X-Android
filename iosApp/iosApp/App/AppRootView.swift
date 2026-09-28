@@ -7,19 +7,16 @@
 //  between NavigationDestinations.LOGIN and the main graph.
 //
 
+import Foundation
+import Combine
 import SwiftUI
-import SharedAuthDomain
 
 struct AppRootView: View {
 
     @EnvironmentObject private var authSession: AuthSession
 
-    // Hold the ViewModel so it survives recomposition while logged out.
-    @StateObject private var loginViewModel: LoginViewModel
-
-    init(loginViewModel: LoginViewModel) {
-        _loginViewModel = StateObject(wrappedValue: loginViewModel)
-    }
+    // AppContainer owns the lifetime — we just observe it here.
+    @ObservedObject var loginViewModel: LoginViewModel
 
     var body: some View {
         Group {

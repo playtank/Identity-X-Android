@@ -18,6 +18,7 @@
 
 import SwiftUI
 import LocalAuthentication
+import SharedAuthDomain
 
 struct LoginView: View {
 
@@ -264,10 +265,18 @@ struct LoginView: View {
 
 // MARK: - Preview
 
-#Preview {
-    let dataSource = MockLoginDataSource()
-    let repo       = SharedAuthDomainLoginRepository(dataSource: dataSource)
-    let useCase    = SharedAuthDomainLoginUseCase(repository: repo)
-    let vm         = LoginViewModel(loginUseCase: useCase)
-    return LoginView(viewModel: vm)
+//#Preview {
+//    let dataSource = MockLoginDataSource()
+//    let repo       = LoginRepository(dataSource: dataSource)
+//    let useCase    = LoginUseCase(repository: repo)
+//    let vm         = LoginViewModel(loginUseCase: useCase, userPrefs: PreviewUserPrefs())
+//    return LoginView(viewModel: vm)
+//}
+
+// Minimal prefs stub for previews only
+private final class PreviewUserPrefs: NSObject, LocalUserPreferencesProvider {
+    func getRememberedEmail() -> String? { nil }
+    func isBiometricEnabled() -> Bool { false }
+    func saveUserPreferences(email: String, biometricEnabled: Bool) {}
+    func clearUserPreferences() {}
 }

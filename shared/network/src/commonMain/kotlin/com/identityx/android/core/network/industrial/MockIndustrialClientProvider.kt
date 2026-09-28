@@ -10,7 +10,7 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.http.headersOf
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
-import okio.IOException
+import io.ktor.utils.io.errors.IOException
 
 object MockIndustrialClientProvider {
 

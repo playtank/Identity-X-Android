@@ -2,52 +2,57 @@
 //  iosAppApp.swift
 //  iosApp
 //
-//  Created by Yunwen Lei on 9/23/26.
-//
-//  Wires the full dependency graph:
-//    KeychainTokenStore → RealLoginDataSource
-//    AuthSession        → environment object for all views
-//    LoginUseCase       → LoginViewModel → AppRootView → LoginView / DashboardView
+//  The entire data/domain graph is built in Kotlin via LoginServiceFactory.
+//  Swift owns only the session observable and the SwiftUI presentation layer.
 //
 
 import SwiftUI
+import Combine
 import SharedAuthDomain
+
+// MARK: - App container
+
+final class AppContainer: ObservableObject {
+
+    static let baseURL = "https://api.identityx.com"
+
+    let authSession:    AuthSession
+    let loginViewModel: LoginViewModel
+
+    init() {
+        // 1. Session — created first so it can be passed into the Kotlin factory
+        let session = AuthSession()
+        self.authSession = session
+
+        // 2. Build the entire Kotlin graph in one call
+        //    LoginServiceFactory lives in SharedAuthDomain (iosMain Kotlin)
+        let services = LoginServiceFactory.shared.create(
+            baseUrl:         Self.baseURL,
+            sessionCallback: session
+        )
+
+        // 3. Restore persisted session from Keychain
+        session.configure(tokenProvider: services.tokenProvider)
+
+        // 4. SwiftUI ViewModel — both dependencies come from Kotlin
+        self.loginViewModel = LoginViewModel(
+            loginUseCase: services.loginUseCase,
+            userPrefs:    services.tokenProvider
+        )
+    }
+}
+
+// MARK: - App entry point
 
 @main
 struct iosAppApp: App {
 
-    // MARK: - Shared singletons
-
-    private let authSession   = AuthSession()
-    private let tokenStore    = KeychainTokenStore.shared
-    private let userPrefs     = UserPreferencesStore.shared
-
-    // MARK: - KMP object graph
-
-    /// Change to your real server URL (or drive from a build config / Info.plist).
-    private static let baseURL = "https://api.identityx.com"
-
-    // Lazy so `authSession` is fully initialised before we pass it in.
-    private lazy var loginUseCase: SharedAuthDomainLoginUseCase = {
-        let dataSource = RealLoginDataSource(
-            baseURL:    Self.baseURL,
-            tokenStore: tokenStore,
-            session:    authSession
-        )
-        let repository = SharedAuthDomainLoginRepository(dataSource: dataSource)
-        return SharedAuthDomainLoginUseCase(repository: repository)
-    }()
-
-    private lazy var loginViewModel: LoginViewModel = {
-        LoginViewModel(loginUseCase: loginUseCase, userPrefs: userPrefs)
-    }()
-
-    // MARK: - Scene
+    @StateObject private var container = AppContainer()
 
     var body: some Scene {
         WindowGroup {
-            AppRootView(loginViewModel: loginViewModel)
-                .environmentObject(authSession)
+            AppRootView(loginViewModel: container.loginViewModel)
+                .environmentObject(container.authSession)
         }
     }
 }

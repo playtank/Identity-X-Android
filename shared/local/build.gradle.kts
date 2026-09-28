@@ -30,6 +30,11 @@ kotlin {
     // TokenProvider / UserPreferencesProvider without pulling in AGP.
     jvm()
 
+    // ── iOS Targets ───────────────────────────────────────────────────────────
+    iosX64()
+    iosArm64()
+    iosSimulatorArm64()
+
     sourceSets {
         commonMain.dependencies {
             implementation(libs.kotlinx.coroutines.core)

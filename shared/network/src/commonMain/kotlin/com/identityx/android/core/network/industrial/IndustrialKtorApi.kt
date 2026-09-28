@@ -8,12 +8,10 @@ import io.ktor.client.statement.HttpResponse
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import io.ktor.http.isSuccess
-import javax.inject.Inject
-import javax.inject.Named
 
-class IndustrialKtorApi @Inject constructor(
-    @Named("industrialHttpClient") private val httpClient: HttpClient,
-    @Named("industrialBaseUrl") private val baseUrl: String
+class IndustrialKtorApi(
+    private val httpClient: HttpClient,
+    private val baseUrl: String
 ) {
     suspend fun uploadAssetBytes(assetId: String, bytes: ByteArray): NetworkResponse {
         return try {

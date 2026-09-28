@@ -61,6 +61,10 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             implementation(libs.kotlinx.coroutines.core)
+            // RealLoginDataSource depends on IdentityXApiClient (Ktor) and AuthRequest/AuthResponse
+            implementation(project(":shared:network"))
+            // RealLoginDataSource depends on TokenProvider interface
+            implementation(project(":shared:local"))
         }
 
         commonTest.dependencies {

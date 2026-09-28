@@ -2,15 +2,13 @@
 //  LoginViewModel.swift
 //  iosApp
 //
-//  SwiftUI ObservableObject mirror of Android's LoginViewModel.
-//  Uses the KMP LoginUseCase from SharedAuthDomain for the actual auth call.
-//
-//  State machine:
-//    Idle ──[submit]──▶ Loading ──[success]──▶ BiometricPrompting or navigate
-//                                └──[failure]──▶ Error(message)
+//  SwiftUI ObservableObject — drives the login screen.
+//  Uses KMP LoginUseCase for the network call and
+//  KMP LocalKeychainTokenProvider (via UserPreferencesProvider) for persistence.
 //
 
 import Foundation
+import Combine
 import LocalAuthentication
 import SharedAuthDomain
 
@@ -20,12 +18,12 @@ final class LoginViewModel: ObservableObject {
     // MARK: - UI State
 
     struct UiState {
-        var email:               String  = ""
-        var password:            String  = ""
-        var rememberUsername:    Bool    = false
-        var biometricEnabled:    Bool    = false
+        var email:                String = ""
+        var password:             String = ""
+        var rememberUsername:     Bool   = false
+        var biometricEnabled:     Bool   = false
         var isBiometricAvailable: Bool   = false
-        var status:              Status  = .idle
+        var status:               Status = .idle
 
         enum Status: Equatable {
             case idle
@@ -36,27 +34,22 @@ final class LoginViewModel: ObservableObject {
     }
 
     @Published private(set) var uiState = UiState()
-
-    /// Fires once when the user should be taken to the dashboard.
     @Published private(set) var shouldNavigateToDashboard = false
 
     // MARK: - Dependencies
 
-    private let loginUseCase: SharedAuthDomainLoginUseCase
-    private let userPrefs: UserPreferencesStore
+    private let loginUseCase: LoginUseCase
+    private let userPrefs: any LocalUserPreferencesProvider
 
     // MARK: - Init
 
-    init(
-        loginUseCase: SharedAuthDomainLoginUseCase,
-        userPrefs: UserPreferencesStore = .shared
-    ) {
+    init(loginUseCase: LoginUseCase, userPrefs: any LocalUserPreferencesProvider) {
         self.loginUseCase = loginUseCase
         self.userPrefs    = userPrefs
         restorePreferences()
     }
 
-    // MARK: - Intent handlers  (mirrors LoginViewModel.onIntent)
+    // MARK: - Intents
 
     func onEmailChanged(_ email: String) {
         uiState.email  = email
@@ -68,43 +61,36 @@ final class LoginViewModel: ObservableObject {
         uiState.status   = .idle
     }
 
-    func onRememberUsernameChanged(_ checked: Bool) {
-        uiState.rememberUsername = checked
-    }
-
-    func onBiometricEnabledChanged(_ checked: Bool) {
-        uiState.biometricEnabled = checked
-    }
+    func onRememberUsernameChanged(_ checked: Bool) { uiState.rememberUsername = checked }
+    func onBiometricEnabledChanged(_ checked: Bool) { uiState.biometricEnabled = checked }
 
     func onBiometricSuccess() {
-        uiState.status             = .idle
-        shouldNavigateToDashboard  = true
+        uiState.status            = .idle
+        shouldNavigateToDashboard = true
     }
 
-    func onBiometricDismissed() {
-        uiState.status = .idle
-    }
+    func onBiometricDismissed() { uiState.status = .idle }
 
     func submit() {
         guard uiState.status != .loading else { return }
-
         let email    = uiState.email.trimmingCharacters(in: .whitespaces)
         let password = uiState.password
-
         guard !email.isEmpty, !password.isEmpty else {
             uiState.status = .error("Email and password are required")
             return
         }
-
         uiState.status = .loading
-
-        Task {
-            do {
-                // KMP suspend fun bridged as async throws
-                _ = try await loginUseCase.invoke(email: email, password: password)
-                await handleLoginSuccess(email: email)
-            } catch {
-                uiState.status = .error(error.localizedDescription)
+        loginUseCase.invoke(email: email, password: password) { [weak self] _, error in
+            guard let self else { return }
+            // Kotlin completion handler fires on a background thread — hop to main
+            DispatchQueue.main.async {
+                if let error {
+                    self.uiState.status = .error(error.localizedDescription)
+                } else {
+                    Task { @MainActor in
+                        await self.handleLoginSuccess(email: email)
+                    }
+                }
             }
         }
     }
@@ -113,24 +99,20 @@ final class LoginViewModel: ObservableObject {
 
     private func restorePreferences() {
         uiState.isBiometricAvailable = biometricAvailable()
-
-        if let email = userPrefs.rememberedEmail {
+        if let email = userPrefs.getRememberedEmail() {
             uiState.email            = email
             uiState.rememberUsername = true
-            uiState.biometricEnabled = userPrefs.isBiometricEnabled
+            uiState.biometricEnabled = userPrefs.isBiometricEnabled()
         }
     }
 
     private func handleLoginSuccess(email: String) async {
         let state = uiState
-
-        // Persist or clear preferences — mirrors Android ViewModel post-login block
         if state.rememberUsername {
-            userPrefs.save(email: email, biometricEnabled: state.biometricEnabled)
+            userPrefs.saveUserPreferences(email: email, biometricEnabled: state.biometricEnabled)
         } else {
-            userPrefs.clear()
+            userPrefs.clearUserPreferences()
         }
-
         if state.rememberUsername && state.biometricEnabled {
             uiState.status = .biometricPrompting
         } else {

@@ -38,6 +38,8 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             implementation(libs.kotlinx.coroutines.core)
+            // Keychain-backed settings for iOS, SharedPreferences-backed for Android
+            implementation(libs.multiplatform.settings)
         }
 
         androidMain.dependencies {

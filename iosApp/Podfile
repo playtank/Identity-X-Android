@@ -1,0 +1,7 @@
+target 'iosApp' do
+  use_frameworks!
+  platform :ios, '15.0'
+
+  # 桥接根目录下的 shared/auth-domain 模块
+  pod 'SharedAuthDomain', :path => '../shared/auth-domain'
+end

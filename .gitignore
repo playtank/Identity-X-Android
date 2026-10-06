@@ -10,6 +10,10 @@
 /.idea/.name
 /.idea/deploymentTargetDropDown.xml
 /.idea/migrations.xml
+/.idea/shelf/
+/.idea/dictionaries/
+/.idea/httpRequests/
+/.idea/dataSources/
 .DS_Store
 /build
 /captures
@@ -18,3 +22,6 @@
 local.properties
 *.jks
 .kotlin/
+
+# Build output in all submodules
+**/build/

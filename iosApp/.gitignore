@@ -1,0 +1,14 @@
+# CocoaPods — generated artifacts, do not commit
+Pods/
+
+# Xcode per-user state — not shared between developers
+*.xcworkspace/xcuserdata/
+*.xcodeproj/xcuserdata/
+*.xcodeproj/project.xcworkspace/xcuserdata/
+
+# Xcode derived data and build output
+DerivedData/
+build/
+
+# macOS
+.DS_Store

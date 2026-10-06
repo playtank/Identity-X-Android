@@ -5,12 +5,11 @@ plugins {
 }
 
 android {
-    namespace = "com.identityx.local"
+    namespace = "com.identityx.local.core"
     compileSdk = 36
 
     defaultConfig {
         minSdk = 30
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles("consumer-rules.pro")
     }
 
@@ -37,22 +36,23 @@ ksp {
 }
 
 dependencies {
-    implementation(libs.androidx.core.ktx)
-    implementation(libs.androidx.appcompat)
-    implementation(libs.material)
-    testImplementation(libs.junit)
-    androidTestImplementation(libs.androidx.junit)
-    androidTestImplementation(libs.androidx.espresso.core)
+    // Re-export the KMP module so all existing consumers keep compiling unchanged
+    api(project(":shared:local"))
 
-    // Room
+    // LocalDataModule.kt directly references these — must be on this module's compile classpath
     implementation(libs.room.runtime)
     implementation(libs.room.ktx)
+    implementation(libs.androidx.security.crypto)
+    implementation(libs.androidx.core.ktx)
+
+    // Room KSP compiler — runs here, not in :shared:local (KSP incompatible with KMP plugin)
     ksp(libs.room.compiler)
 
-    // Hilt
+    // Hilt — same reason
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
 
-    // Encrypted token storage
-    implementation(libs.androidx.security.crypto)
+    testImplementation(libs.junit)
+    androidTestImplementation(libs.androidx.junit)
+    androidTestImplementation(libs.androidx.espresso.core)
 }

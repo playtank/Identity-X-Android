@@ -1,0 +1,16 @@
+PODS:
+  - SharedAuthDomain (1.0.0)
+
+DEPENDENCIES:
+  - SharedAuthDomain (from `../shared/auth-domain`)
+
+EXTERNAL SOURCES:
+  SharedAuthDomain:
+    :path: "../shared/auth-domain"
+
+SPEC CHECKSUMS:
+  SharedAuthDomain: bc8dbc3b2c3385d73e5559f257d5ba15b5927806
+
+PODFILE CHECKSUM: def2e3e3677ec52c7d1bcccb64a6d8479db77b3c
+
+COCOAPODS: 1.17.0

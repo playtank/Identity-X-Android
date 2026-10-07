@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="network">
+    <output-path>$PROJECT_DIR$/shared/network/build/libs</output-path>
+    <root id="archive" name="network.jar">
+      <element id="module-output" name="Authentication.shared.network.androidMain" />
+    </root>
+  </artifact>
+</component>

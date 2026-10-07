@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="local-jvm">
+    <output-path>$PROJECT_DIR$/shared/local/build/libs</output-path>
+    <root id="archive" name="local-jvm.jar">
+      <element id="module-output" name="Authentication.shared.local.jvmMain" />
+    </root>
+  </artifact>
+</component>

@@ -11,7 +11,7 @@ import androidx.navigation.compose.rememberNavController
 import com.identityx.android.core.navigation.LoginActions
 import com.identityx.android.core.navigation.NavigationDestinations
 import com.identityx.android.core.network.session.SessionManager
-import com.identityx.authentication.ui.DashboardScreen
+import com.identityx.dashboard.DashboardScreen
 import com.identityx.industrial_capture.IndustrialCaptureScreen
 import com.identityx.industrial_capture.IndustrialCaptureViewModel
 import com.identityx.login.navigation.loginNavGraph
@@ -69,13 +69,11 @@ fun AppNavHost(
 
         composable(route = NavigationDestinations.HOME) {
             DashboardScreen(
-                onLogout = {
+                onSignOutClick = {
                     sessionManager.onLogout()
                     backToLogin(navController)
                 },
-                onScan = {
-                    navController.navigate(NavigationDestinations.SCAN)
-                }
+                onCardClick = { /* TODO: wire card detail navigation */ }
             )
         }
 

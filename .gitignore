@@ -1,19 +1,8 @@
 *.iml
 .gradle
 /local.properties
-/.idea/caches
-/.idea/libraries
-/.idea/modules.xml
-/.idea/workspace.xml
-/.idea/navEditor.xml
-/.idea/assetWizardSettings.xml
-/.idea/.name
-/.idea/deploymentTargetDropDown.xml
-/.idea/migrations.xml
-/.idea/shelf/
-/.idea/dictionaries/
-/.idea/httpRequests/
-/.idea/dataSources/
+# Ignore all IDE project files — these are developer-local and conflict across machines
+.idea/
 .DS_Store
 /build
 /captures

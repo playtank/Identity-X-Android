@@ -22,6 +22,10 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Snackbar
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -29,6 +33,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -45,6 +50,7 @@ import androidx.fragment.app.FragmentActivity
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.identityx.android.core.navigation.LoginActions
+import kotlinx.coroutines.launch
 import com.identityx.login.domain.delegate.BiometricDelegateImpl
 import com.identityx.login.domain.model.LoginUiState
 import com.identityx.login.domain.model.LoginUiState.LoginStatus
@@ -52,10 +58,20 @@ import com.identityx.login.domain.model.LoginUiState.LoginStatus
 @Composable
 fun LoginScreen(
     actions: LoginActions,
+    sessionExpiredMessage: String? = null,
     viewModel: LoginViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+
+    // Show session-expired Snackbar once when arriving from a forced logout
+    LaunchedEffect(sessionExpiredMessage) {
+        if (sessionExpiredMessage != null) {
+            scope.launch { snackbarHostState.showSnackbar(sessionExpiredMessage) }
+        }
+    }
 
     // Navigate on success
     LaunchedEffect(Unit) {
@@ -78,22 +94,36 @@ fun LoginScreen(
         }
     }
 
-    LoginScreenContent(
-        uiState = uiState,
-        onEmailChange = { viewModel.onIntent(LoginUiIntent.EmailChanged(it)) },
-        onPasswordChange = { viewModel.onIntent(LoginUiIntent.PasswordChanged(it)) },
-        onRememberUsernameChange = { viewModel.onIntent(LoginUiIntent.RememberUsernameChanged(it)) },
-        onBiometricEnabledChange = { viewModel.onIntent(LoginUiIntent.BiometricEnabledChanged(it)) },
-        onSubmit = { viewModel.onIntent(LoginUiIntent.Submit) },
-        onForgotPassword = actions.onNavigateToForgotPassword,
-        onRegister = actions.onNavigateToRegistration,
-        onSupport = actions.onNavigateToSupport
-    )
+    Scaffold(
+        snackbarHost = {
+            SnackbarHost(hostState = snackbarHostState) { data ->
+                Snackbar(
+                    snackbarData        = data,
+                    containerColor      = MaterialTheme.colorScheme.errorContainer,
+                    contentColor        = MaterialTheme.colorScheme.onErrorContainer
+                )
+            }
+        }
+    ) { innerPadding ->
+        LoginScreenContent(
+            modifier              = Modifier.padding(innerPadding),
+            uiState               = uiState,
+            onEmailChange         = { viewModel.onIntent(LoginUiIntent.EmailChanged(it)) },
+            onPasswordChange      = { viewModel.onIntent(LoginUiIntent.PasswordChanged(it)) },
+            onRememberUsernameChange = { viewModel.onIntent(LoginUiIntent.RememberUsernameChanged(it)) },
+            onBiometricEnabledChange = { viewModel.onIntent(LoginUiIntent.BiometricEnabledChanged(it)) },
+            onSubmit              = { viewModel.onIntent(LoginUiIntent.Submit) },
+            onForgotPassword      = actions.onNavigateToForgotPassword,
+            onRegister            = actions.onNavigateToRegistration,
+            onSupport             = actions.onNavigateToSupport
+        )
+    }
 }
 
 @Composable
 private fun LoginScreenContent(
     uiState: LoginUiState,
+    modifier: Modifier = Modifier,
     onEmailChange: (String) -> Unit,
     onPasswordChange: (String) -> Unit,
     onRememberUsernameChange: (Boolean) -> Unit,
@@ -110,7 +140,7 @@ private fun LoginScreenContent(
             uiState.status !is LoginStatus.BiometricPrompting
 
     Box(
-        modifier = Modifier.fillMaxSize(),
+        modifier = modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
     ) {
         Column(

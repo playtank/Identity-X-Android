@@ -79,7 +79,7 @@ fun DashboardScreen(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun DashboardScreenContent(
+internal fun DashboardScreenContent(
     uiState: DashboardUiState,
     onSignOutClick: () -> Unit,
     onGenerateAgentDispatch: () -> Unit,

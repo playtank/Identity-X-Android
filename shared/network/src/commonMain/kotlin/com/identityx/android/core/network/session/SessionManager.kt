@@ -4,8 +4,11 @@ import com.identityx.local.domain.TokenProvider
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import javax.inject.Inject
+import javax.inject.Singleton
 
-class SessionManager(
+@Singleton
+class SessionManager @Inject constructor(
     private val tokenProvider: TokenProvider,
     private val sessionEventBus: SessionEventBus
 ) {
@@ -16,7 +19,7 @@ class SessionManager(
         _sessionState.value = if (tokenProvider.getAccessToken() != null)
             SessionState.Authenticated
         else
-            SessionState.Unauthenticated
+            SessionState.Unauthenticated()
     }
 
     val isLoggedIn: Boolean
@@ -26,20 +29,33 @@ class SessionManager(
         _sessionState.value = SessionState.Authenticated
     }
 
+    /** Explicit user-initiated sign out — no message needed. */
     fun onLogout() {
         tokenProvider.clearTokens()
-        _sessionState.value = SessionState.Unauthenticated
+        _sessionState.value = SessionState.Unauthenticated()
     }
 
+    /**
+     * Called by the Ktor Auth plugin when the refresh token is expired or invalid.
+     * Carries a user-facing message so the login screen can display a Snackbar.
+     */
     fun onSessionExpired() {
         tokenProvider.clearTokens()
-        _sessionState.value = SessionState.Unauthenticated
+        _sessionState.value = SessionState.Unauthenticated(
+            reason = "Your session has expired. Please sign in again."
+        )
         sessionEventBus.postSessionExpired()
     }
 
     sealed interface SessionState {
-        data object Authenticating  : SessionState
-        data object Authenticated   : SessionState
-        data object Unauthenticated : SessionState
+        data object Authenticating : SessionState
+        data object Authenticated  : SessionState
+
+        /**
+         * @param reason Non-null only when the session was terminated
+         *               involuntarily (e.g. expired refresh token).
+         *               Null for normal logout — no message should be shown.
+         */
+        data class Unauthenticated(val reason: String? = null) : SessionState
     }
 }

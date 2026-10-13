@@ -16,12 +16,6 @@ import com.identityx.industrial_capture.IndustrialCaptureScreen
 import com.identityx.industrial_capture.IndustrialCaptureViewModel
 import com.identityx.login.navigation.loginNavGraph
 
-/**
- * Root NavHost for the handheld app.
- *
- * Owns all NavController calls — feature modules never import NavController.
- * Observes [SessionManager.sessionState] to react to forced logout when both tokens expire.
- */
 @Composable
 fun AppNavHost(
     navController: NavHostController = rememberNavController(),
@@ -29,15 +23,23 @@ fun AppNavHost(
     sessionManager: SessionManager
 ) {
     LaunchedEffect(Unit) {
-        // Skip the initial Unauthenticated / Authenticating state emitted at startup.
-        // Only force-navigate to login if the session expires AFTER the user has
-        // already reached the Authenticated state (i.e. a mid-session token expiry).
         var hasBeenAuthenticated = false
         sessionManager.sessionState.collect { state ->
             when (state) {
-                is SessionManager.SessionState.Authenticated -> hasBeenAuthenticated = true
+                is SessionManager.SessionState.Authenticated -> {
+                    hasBeenAuthenticated = true
+                }
                 is SessionManager.SessionState.Unauthenticated -> {
-                    if (hasBeenAuthenticated) backToLogin(navController)
+                    if (hasBeenAuthenticated) {
+                        val reason = state.reason
+                        val destination = if (reason != null)
+                            NavigationDestinations.loginWithReason(reason)
+                        else
+                            NavigationDestinations.LOGIN
+                        navController.navigate(destination) {
+                            popUpTo(0) { inclusive = true }
+                        }
+                    }
                 }
                 else -> Unit
             }
@@ -45,46 +47,23 @@ fun AppNavHost(
     }
 
     NavHost(
-        navController = navController,
+        navController    = navController,
         startDestination = startDestination
     ) {
-        loginNavGraph(
-            actions = LoginActions(
-                onLoginSuccess = {
-                    navController.navigate(NavigationDestinations.HOME) {
-                        popUpTo(NavigationDestinations.LOGIN) { inclusive = true }
-                    }
-                },
-                onNavigateToRegistration = {
-                    navController.navigate(NavigationDestinations.REGISTRATION)
-                },
-                onNavigateToForgotPassword = {
-                    navController.navigate(NavigationDestinations.FORGOT_PASSWORD)
-                },
-                onNavigateToSupport = {
-                    navController.navigate(NavigationDestinations.SUPPORT)
-                }
-            )
-        )
+        loginNavGraph(actions = loginActions(navController))
 
         composable(route = NavigationDestinations.HOME) {
             DashboardScreen(
-                onSignOutClick = {
-                    sessionManager.onLogout()
-                    backToLogin(navController)
-                },
-                onCardClick = { /* TODO: wire card detail navigation */ }
+                onSignOutClick = { sessionManager.onLogout() },
+                onCardClick    = { }
             )
         }
 
-        // Scan / barcode capture screen
         composable(route = NavigationDestinations.SCAN) {
             val viewModel: IndustrialCaptureViewModel = hiltViewModel()
             IndustrialCaptureScreen(
-                viewModel = viewModel,
-                onNavigateBack = {
-                    navController.popBackStack()
-                }
+                viewModel      = viewModel,
+                onNavigateBack = { navController.popBackStack() }
             )
         }
 
@@ -102,12 +81,13 @@ fun AppNavHost(
     }
 }
 
-/**
- * Navigates to Login and clears the entire back stack.
- * Shared by manual logout and forced session expiry.
- */
-private fun backToLogin(navController: NavHostController) {
-    navController.navigate(NavigationDestinations.LOGIN) {
-        popUpTo(0) { inclusive = true }
-    }
-}
+private fun loginActions(navController: NavHostController) = LoginActions(
+    onLoginSuccess = {
+        navController.navigate(NavigationDestinations.HOME) {
+            popUpTo(0) { inclusive = true }
+        }
+    },
+    onNavigateToRegistration   = { navController.navigate(NavigationDestinations.REGISTRATION) },
+    onNavigateToForgotPassword = { navController.navigate(NavigationDestinations.FORGOT_PASSWORD) },
+    onNavigateToSupport        = { navController.navigate(NavigationDestinations.SUPPORT) }
+)

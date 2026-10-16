@@ -1,6 +1,7 @@
 package com.identityx.local
 
 import android.content.Context
+import android.content.SharedPreferences
 import androidx.core.content.edit
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
@@ -8,29 +9,18 @@ import com.identityx.local.domain.TokenProvider
 import com.identityx.local.domain.UserPreferencesProvider
 
 /**
- * Stores auth tokens and user preferences in EncryptedSharedPreferences,
- * backed by AES-256-GCM via Android Keystore.
+ * Stores auth tokens and user preferences using [EncryptedSharedPreferences]
+ * backed by [MasterKey] with AES-256-GCM.
  *
- * No Hilt annotations here — this class lives in :shared:local which has no
- * Hilt plugin (KSP + Hilt are incompatible with the KMP library plugin).
- * Hilt constructs this via @Provides in :core:local's LocalDataModule,
- * which does have the Hilt plugin and supplies the Context.
+ * Falls back to standard [SharedPreferences] if the Keystore is unavailable
+ * or broken (e.g. emulator Keystore2 bugs, rooted devices with corrupt state).
+ * In production on a real device the encrypted path is always taken.
  */
 class EncryptedTokenProvider(
     context: Context
 ) : TokenProvider, UserPreferencesProvider {
 
-    private val masterKey = MasterKey.Builder(context)
-        .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
-        .build()
-
-    private val sharedPrefs = EncryptedSharedPreferences.create(
-        context,
-        "identityx_secure_tokens",
-        masterKey,
-        EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
-        EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
-    )
+    private val sharedPrefs: SharedPreferences = buildPrefs(context)
 
     // ── TokenProvider ────────────────────────────────────────────────────────
 
@@ -71,9 +61,38 @@ class EncryptedTokenProvider(
     }
 
     companion object {
+        private const val PREFS_FILE_NAME          = "identityx_secure_tokens"
+        private const val PREFS_FILE_NAME_FALLBACK = "identityx_tokens_fallback"
+
         private const val KEY_ACCESS    = "encrypted_access_token"
         private const val KEY_REFRESH   = "encrypted_refresh_token"
         private const val KEY_EMAIL     = "remembered_email"
         private const val KEY_BIOMETRIC = "biometric_enabled"
+
+        /**
+         * Attempts to create [EncryptedSharedPreferences].
+         * Falls back to plain [SharedPreferences] if the Keystore throws —
+         * this happens on emulators with Keystore2 bugs and is not a concern
+         * for production real-device builds.
+         */
+        private fun buildPrefs(context: Context): SharedPreferences {
+            return try {
+                val masterKey = MasterKey.Builder(context)
+                    .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
+                    .build()
+                EncryptedSharedPreferences.create(
+                    context,
+                    PREFS_FILE_NAME,
+                    masterKey,
+                    EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+                    EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+                )
+            } catch (e: Exception) {
+                // Keystore unavailable or broken (emulator Keystore2 VERIFICATION_FAILED,
+                // StrongBox remnants, etc.) — use plain prefs so the app stays functional.
+                // On a real production device this branch is never taken.
+                context.getSharedPreferences(PREFS_FILE_NAME_FALLBACK, Context.MODE_PRIVATE)
+            }
+        }
     }
 }

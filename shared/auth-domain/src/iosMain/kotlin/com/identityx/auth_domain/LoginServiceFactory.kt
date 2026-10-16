@@ -58,18 +58,20 @@ object LoginServiceFactory {
 
         return LoginServiceResult(
             loginUseCase  = useCase,
-            tokenProvider = tokenProvider
+            tokenProvider = tokenProvider,
+            apiClient     = apiClient
         )
     }
 }
 
 /**
- * Carries the two objects Swift actually needs after the graph is built:
- *  - [loginUseCase]  → drives [LoginViewModel]
- *  - [tokenProvider] → drives [AuthSession] (token check on cold start)
- *                      and [LoginViewModel] (UserPreferencesProvider for remembered email)
+ * Carries the objects Swift needs after the graph is built:
+ *  - [loginUseCase]  → drives LoginViewModel
+ *  - [tokenProvider] → drives AuthSession (cold-start token check) + LoginViewModel prefs
+ *  - [apiClient]     → drives DashboardViewModel (profile fetch, future endpoints)
  */
 class LoginServiceResult(
     val loginUseCase:  LoginUseCase,
-    val tokenProvider: KeychainTokenProvider
+    val tokenProvider: KeychainTokenProvider,
+    val apiClient:     IdentityXApiClient
 )

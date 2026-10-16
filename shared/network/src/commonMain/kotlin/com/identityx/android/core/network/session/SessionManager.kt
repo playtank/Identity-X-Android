@@ -4,11 +4,8 @@ import com.identityx.local.domain.TokenProvider
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import javax.inject.Inject
-import javax.inject.Singleton
 
-@Singleton
-class SessionManager @Inject constructor(
+class SessionManager(
     private val tokenProvider: TokenProvider,
     private val sessionEventBus: SessionEventBus
 ) {

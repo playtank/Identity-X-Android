@@ -41,6 +41,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.fragment.app.FragmentActivity
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -251,7 +252,11 @@ private fun LoginScreenContent(
                         color = MaterialTheme.colorScheme.onPrimary
                     )
                 } else {
-                    Text("Sign In")
+                    Text(
+                        text = "Sign In",
+                        fontSize = 32.sp,
+                        style = MaterialTheme.typography.labelLarge
+                    )
                 }
             }
 
@@ -303,6 +308,23 @@ private fun LoginScreenBiometricPreview() {
 @Preview(showBackground = true)
 @Composable
 private fun LoginScreenErrorPreview() {
+    LoginScreenContent(
+        uiState = LoginUiState(
+            status = LoginStatus.Error("Invalid email or password")
+        ),
+        onEmailChange = {}, onPasswordChange = {}, onSubmit = {},
+        onRememberUsernameChange = {}, onBiometricEnabledChange = {},
+        onForgotPassword = {}, onRegister = {}, onSupport = {}
+    )
+}
+
+@Preview(
+    name = "Large Font Accessibility Test",
+    showBackground = true,
+    fontScale = 1.5f
+)
+@Composable
+fun LoginScreenLargeFontPreview() {
     LoginScreenContent(
         uiState = LoginUiState(
             status = LoginStatus.Error("Invalid email or password")

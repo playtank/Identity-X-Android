@@ -94,6 +94,7 @@ fun LoginScreen(
 
 @Composable
 private fun LoginScreenContent(
+    fontSize: Int = 16,
     uiState: LoginUiState,
     onEmailChange: (String) -> Unit,
     onPasswordChange: (String) -> Unit,
@@ -278,7 +279,7 @@ private fun LoginScreenContent(
     }
 }
 
-@Preview(showBackground = true)
+@Preview(showBackground = true, name = "Large Font")
 @Composable
 private fun LoginScreenPreview() {
     LoginScreenContent(

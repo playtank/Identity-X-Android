@@ -1,6 +1,10 @@
 *.iml
 .gradle
 /local.properties
+<<<<<<< HEAD
+# Ignore all IDE project files — these are developer-local and conflict across machines
+.idea/
+=======
 /.idea/caches
 /.idea/libraries
 /.idea/modules.xml
@@ -14,6 +18,8 @@
 /.idea/dictionaries/
 /.idea/httpRequests/
 /.idea/dataSources/
+/.idea/androidTestResultsUserPreferences.xml
+>>>>>>> 2cac12478c820f422156fb0039f4a83cf5f460af
 .DS_Store
 /build
 /captures

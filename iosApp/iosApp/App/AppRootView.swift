@@ -3,41 +3,31 @@
 //  iosApp
 //
 //  Root router — switches between LoginView and DashboardView based on
-//  AuthSession.isLoggedIn. Equivalent of Android's AppNavHost routing
-//  between NavigationDestinations.LOGIN and the main graph.
+//  AuthSession.isLoggedIn. Equivalent of Android's AppNavHost.
 //
 
-import Foundation
-import Combine
 import SwiftUI
+import Combine
 
 struct AppRootView: View {
 
     @EnvironmentObject private var authSession: AuthSession
 
-    // AppContainer owns the lifetime — we just observe it here.
-    @ObservedObject var loginViewModel: LoginViewModel
+    @ObservedObject var loginViewModel:     LoginViewModel
+    @ObservedObject var dashboardViewModel: DashboardViewModel
 
     var body: some View {
         Group {
             if authSession.isLoggedIn {
-                DashboardView()
+                DashboardView(viewModel: dashboardViewModel)
             } else {
                 NavigationStack {
                     LoginView(viewModel: loginViewModel)
                         .navigationBarHidden(true)
                 }
-                // Navigate to dashboard when ViewModel signals success.
                 .onChange(of: loginViewModel.shouldNavigateToDashboard) { navigate in
-                    if navigate {
-                        // AuthSession.isLoggedIn is already true (set by
-                        // RealLoginDataSource after token persistence), so
-                        // this branch just ensures the flag is consumed.
-                        // If using MockLoginDataSource (tests/preview) we
-                        // explicitly flip the session here.
-                        if !authSession.isLoggedIn {
-                            authSession.onLoginSuccess()
-                        }
+                    if navigate, !authSession.isLoggedIn {
+                        authSession.onLoginSuccess()
                     }
                 }
             }

@@ -16,8 +16,9 @@ final class AppContainer: ObservableObject {
 
     static let baseURL = "https://api.identityx.com"
 
-    let authSession:    AuthSession
-    let loginViewModel: LoginViewModel
+    let authSession:       AuthSession
+    let loginViewModel:    LoginViewModel
+    let dashboardViewModel: DashboardViewModel
 
     init() {
         // 1. Session — created first so it can be passed into the Kotlin factory
@@ -25,7 +26,6 @@ final class AppContainer: ObservableObject {
         self.authSession = session
 
         // 2. Build the entire Kotlin graph in one call
-        //    LoginServiceFactory lives in SharedAuthDomain (iosMain Kotlin)
         let services = LoginServiceFactory.shared.create(
             baseUrl:         Self.baseURL,
             sessionCallback: session
@@ -34,10 +34,14 @@ final class AppContainer: ObservableObject {
         // 3. Restore persisted session from Keychain
         session.configure(tokenProvider: services.tokenProvider)
 
-        // 4. SwiftUI ViewModel — both dependencies come from Kotlin
+        // 4. SwiftUI ViewModels — both use Kotlin dependencies
         self.loginViewModel = LoginViewModel(
             loginUseCase: services.loginUseCase,
             userPrefs:    services.tokenProvider
+        )
+
+        self.dashboardViewModel = DashboardViewModel(
+            apiClient: services.apiClient
         )
     }
 }
@@ -51,8 +55,11 @@ struct iosAppApp: App {
 
     var body: some Scene {
         WindowGroup {
-            AppRootView(loginViewModel: container.loginViewModel)
-                .environmentObject(container.authSession)
+            AppRootView(
+                loginViewModel:    container.loginViewModel,
+                dashboardViewModel: container.dashboardViewModel
+            )
+            .environmentObject(container.authSession)
         }
     }
 }
